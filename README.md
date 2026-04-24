@@ -1,8 +1,18 @@
-🛡️ COMRADE: Zero-Trust Local Vault
+<div align="center">
+<h1>🛡️ COMRADE: Zero-Trust Local Vault</h1>
 
-Cyber Operations Module for Resilient Authentication and Data Encryption
+<h4>Cyber Operations Module for Resilient Authentication and Data Encryption</h4>
 
-COMRADE is a high-security, local-first encryption engine designed for developers and privacy advocates. It ensures that sensitive documents, source code, and private data are mathematically protected via industry-standard cryptographic protocols, ensuring your data remains yours alone.
+![Version](https://img.shields.io/badge/version-1.0.2-ff8c00)
+![License](https://img.shields.io/badge/license-MIT-white)
+![Security](https://img.shields.io/badge/encryption-AES--256--GCM-00ffff)
+![Platform](https://img.shields.io/badge/platform-CLI/GUI-blue)
+
+<h6>COMRADE is a high-security, local-first encryption engine designed for developers and privacy advocates. It ensures that sensitive documents, source code, and private data are mathematically protected via industry-standard cryptographic protocols, ensuring your data remains yours alone</h6>
+
+</div>
+
+----------------------------------------------------------------------------------------------------------------------------
 
 ✨ Features
 AES-256-GCM Encryption: Implements Galois/Counter Mode for authenticated encryption, providing both data confidentiality and authenticity (tamper-proofing).
