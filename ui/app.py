@@ -1,11 +1,10 @@
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, PhotoImage
 from core.file_manager import save_file, extract_file, list_secured_files
 import os
 
 # Emerald Enterprise Theme Logic
 ctk.set_appearance_mode("Dark")
-# Setting theme to 'green' ensures all default dialog buttons match your new brand
 ctk.set_default_color_theme("green") 
 
 class FileCard(ctk.CTkFrame):
@@ -14,7 +13,7 @@ class FileCard(ctk.CTkFrame):
         super().__init__(master, fg_color="#18181B", corner_radius=6, height=60, border_width=1, border_color="#27272A")
         self.pack(fill="x", padx=10, pady=5)
         
-        # ID Section (Subtle Zinc)
+        # ID Section
         self.id_label = ctk.CTkLabel(self, text=vault_id[:12]+"...", font=("Consolas", 12), text_color="#71717A")
         self.id_label.pack(side="left", padx=20)
         
@@ -38,6 +37,15 @@ class ComradeApp(ctk.CTk):
         self.title("COMRADE | Secure Repository")
         self.geometry("1100x750")
         self.configure(fg_color="#09090B")
+
+        # Icon handling (Fails safely if logo is missing)
+        try:
+            icon_path = os.path.join(os.getcwd(), "assets", "logo.png")
+            if os.path.exists(icon_path):
+                img = PhotoImage(file=icon_path)
+                self.iconphoto(False, img)
+        except:
+            pass
 
         # --- HEADER ---
         self.header = ctk.CTkFrame(self, fg_color="transparent")
@@ -91,11 +99,6 @@ class ComradeApp(ctk.CTk):
     def update_status(self, text, color="#71717A"):
         self.status_text.configure(text=text.upper(), text_color=color)
 
-    def get_custom_input(self, title, text):
-        """Styled input dialog matching the Emerald theme."""
-        dialog = ctk.CTkInputDialog(text=text, title=title)
-        return dialog.get_input()
-
     def refresh_vault(self):
         for widget in self.container.winfo_children():
             widget.destroy()
@@ -111,7 +114,7 @@ class ComradeApp(ctk.CTk):
     def ui_secure_file(self):
         file_path = filedialog.askopenfilename()
         if file_path:
-            password = self.get_custom_input("Zero-Trust Auth", "Confirm Encryption Key:")
+            password = ctk.CTkInputDialog(text="Confirm Encryption Key:", title="Zero-Trust Auth").get_input()
             if password:
                 try:
                     self.update_status("Committing Asset...", "#10B981")
@@ -123,7 +126,7 @@ class ComradeApp(ctk.CTk):
                     self.update_status("Commit Failed", "#EF4444")
 
     def ui_extract_file(self, vault_id):
-        password = self.get_custom_input("Auth Required", "Enter Extraction Key:")
+        password = ctk.CTkInputDialog(text="Enter Extraction Key:", title="Auth Required").get_input()
         if password:
             try:
                 self.update_status("Pulling Asset...", "#10B981")
