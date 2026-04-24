@@ -74,3 +74,28 @@ def list_secured_files():
     """Returns a list of all files currently in the vault."""
     manifest = load_manifest()
     return [{"vault_name": k, "original_name": v} for k, v in manifest.items()]
+    def delete_vault_file(vault_id):
+    """Permanently deletes a file from the vault and updates the manifest."""
+    import json
+    vault_path = os.path.join("vault", vault_id)
+    # Ensure this matches your actual manifest filename (usually .vault_manifest)
+    manifest_path = ".vault_manifest" 
+
+    # 1. Physical Wipe
+    if os.path.exists(vault_path):
+        os.remove(vault_path)
+    
+    # 2. Database/Manifest Cleanup
+    if os.path.exists(manifest_path):
+        with open(manifest_path, "r") as f:
+            try:
+                data = json.load(f)
+            except:
+                data = []
+        
+        # Keep everything EXCEPT the file we are deleting
+        new_data = [item for item in data if item['vault_name'] != vault_id]
+        
+        with open(manifest_path, "w") as f:
+            json.dump(new_data, f, indent=4)
+    return True
