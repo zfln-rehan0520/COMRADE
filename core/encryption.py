@@ -1,21 +1,30 @@
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from cryptography.hazmat.backends import default_backend
 
-def derive_key(password: str, salt: bytes) -> bytes:
+def encrypt_data(data: bytes, password: str, salt: bytes) -> bytes:
     """
-    Turns a plain-text password into a 32-byte cryptographic key.
+    Encrypts raw bytes using AES-GCM.
+    Returns: nonce + ciphertext
     """
-    kdf = PBKDF2HMAC(
-        algorithm=hashes.SHA256(),
-        length=32,
-        salt=salt,
-        iterations=100000, # High iterations make brute-force harder
-        backend=default_backend()
-    )
-    return kdf.derive(password.encode())
+    from core.auth import derive_key
+    key = derive_key(password, salt)
+    aesgcm = AESGCM(key)
+    nonce = os.urandom(12) # A unique value for every encryption operation
+    
+    ciphertext = aesgcm.encrypt(nonce, data, None)
+    # We store the nonce with the ciphertext so we can decrypt it later
+    return nonce + ciphertext
 
-def generate_salt() -> bytes:
-    """Generates a random 16-byte salt."""
-    return os.urandom(16)
+def decrypt_data(encrypted_data: bytes, password: str, salt: bytes) -> bytes:
+    """
+    Decrypts AES-GCM data. 
+    Expects nonce to be the first 12 bytes.
+    """
+    from core.auth import derive_key
+    key = derive_key(password, salt)
+    aesgcm = AESGCM(key)
+    
+    nonce = encrypted_data[:12]
+    ciphertext = encrypted_data[12:]
+    
+    return aesgcm.decrypt(nonce, ciphertext, None)
