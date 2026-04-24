@@ -1,29 +1,45 @@
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from core.file_manager import list_secured_files
+import os
+from colorama import Fore, Style, init
 
-console = Console()
+# Initialize colorama for Windows compatibility
+init(autoreset=True)
 
-def display_banner():
-    console.print(Panel.fit("🛡️  [bold cyan]COMRADE: ZERO-TRUST VAULT[/bold cyan] 🛡️", border_style="blue"))
+# Emerald Industry Palette
+PRIMARY = Fore.GREEN  # Emerald Green
+SECONDARY = Fore.WHITE # Zinc/White
+DIM = Fore.BLACK + Style.BRIGHT # Slate/Gray
+ERROR = Fore.RED
 
-def show_vault():
-    files = list_secured_files()
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def print_banner():
+    """Professional minimalist banner for COMRADE."""
+    clear_screen()
+    print(f"\n{PRIMARY}{Style.BRIGHT}  🛡️  COMRADE v1.0")
+    print(f"{DIM}  Cyber Operations Module for Resilient Authentication and Data Encryption")
+    print(f"{DIM}  {'-' * 70}")
+
+def print_vault_table(files):
+    """Industry-grade table display."""
     if not files:
-        console.print("[yellow]Vault is empty.[/yellow]")
+        print(f"\n{ERROR}  [!] VAULT EMPTY: No secured assets found.")
         return
 
-    table = Table(title="Secured Files")
-    table.add_column("Vault ID", style="dim")
-    table.add_column("Original Filename", style="green")
+    # Header
+    print(f"\n  {PRIMARY}{'VAULT IDENTIFIER':<30} | {'PROTECTED FILENAME':<40}")
+    print(f"  {DIM}{'═' * 72}")
 
+    # Data Rows
     for f in files:
-        table.add_row(f['vault_name'], f['original_name'])
+        vault_id = f['vault_name']
+        original = f['original_name']
+        # Use Green for the filename to highlight the 'asset'
+        print(f"  {SECONDARY}{vault_id:<30} {DIM}| {PRIMARY}{original:<40}")
+    
+    print(f"  {DIM}{'═' * 72}")
+    print(f"\n  {PRIMARY}● {SECONDARY}SYSTEM STATUS: {PRIMARY}NOMINAL / VAULT SYNCED\n")
 
-    console.print(table)
-
-def get_password(prompt="Enter Master Password: "):
-    # In a real CLI, use getpass to hide typing
-    import getpass
-    return getpass.getpass(prompt)
+def get_password_input(prompt_text="ENTER MASTER KEY: "):
+    """Professional masked input prompt."""
+    return input(f"  {SECONDARY}{prompt_text}{PRIMARY}")
