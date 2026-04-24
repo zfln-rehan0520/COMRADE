@@ -9,19 +9,15 @@ ctk.set_appearance_mode("Dark")
 class FileCard(ctk.CTkFrame):
     """Component for individual assets with GitHub-style aesthetics."""
     def __init__(self, master, vault_id, original_name, extract_callback):
-        # Using GitHub's specific surface and border colors
         super().__init__(master, fg_color="#161B22", corner_radius=6, height=60, border_width=1, border_color="#30363D")
         self.pack(fill="x", padx=10, pady=5)
         
-        # ID Section (Subtle and clean)
         self.id_label = ctk.CTkLabel(self, text=vault_id[:12]+"...", font=("Consolas", 12), text_color="#8B949E")
         self.id_label.pack(side="left", padx=20)
         
-        # Name Section
         self.name_label = ctk.CTkLabel(self, text=original_name, font=("Inter", 13, "bold"), text_color="#C9D1D9")
         self.name_label.pack(side="left", padx=20, expand=True, anchor="w")
         
-        # Action Button (GitHub-style Coral/Orange)
         self.btn_action = ctk.CTkButton(
             self, text="Extract", width=90, height=32, font=("Inter", 11, "bold"),
             fg_color="#F78166", hover_color="#FF7B72", text_color="#0D1117",
@@ -33,7 +29,6 @@ class ComradeApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        # Window Setup
         self.title("COMRADE | Secure Repository")
         self.geometry("1100x750")
         self.configure(fg_color="#0D1117")
@@ -58,7 +53,7 @@ class ComradeApp(ctk.CTk):
         self.toolbar.pack(fill="x", padx=40, pady=10)
         
         self.btn_lock = ctk.CTkButton(self.toolbar, text="+ Secure New Asset", font=("Inter", 13, "bold"),
-                                      fg_color="#238636", hover_color="#2EA043", text_color="#FFFFFF", # GitHub Green for 'New'
+                                      fg_color="#238636", hover_color="#2EA043", text_color="#FFFFFF",
                                       height=48, width=200, command=self.ui_secure_file)
         self.btn_lock.pack(side="left", padx=20, pady=15)
 
@@ -90,10 +85,19 @@ class ComradeApp(ctk.CTk):
     def update_status(self, text, color="#8B949E"):
         self.status_text.configure(text=text.upper(), text_color=color)
 
+    # --- CUSTOM STYLED DIALOGS ---
+    def get_custom_input(self, title, text):
+        """Replacement for ctk.CTkInputDialog with matching theme colors."""
+        dialog = ctk.CTkInputDialog(text=text, title=title)
+        # Apply theme to the dialog window itself
+        dialog.configure(fg_color="#0D1117")
+        # Note: ctk.CTkInputDialog has limited internal styling via direct code, 
+        # but setting default_color_theme handles the button consistency.
+        return dialog.get_input()
+
     def refresh_vault(self):
         for widget in self.container.winfo_children():
             widget.destroy()
-            
         files = list_secured_files()
         if not files:
             ctk.CTkLabel(self.container, text="No encrypted assets found in this branch.", 
@@ -101,30 +105,29 @@ class ComradeApp(ctk.CTk):
         else:
             for f in files:
                 FileCard(self.container, f['vault_name'], f['original_name'], self.ui_extract_file)
-        
         self.update_status("Vault Synced", "#3FB950")
 
     def ui_secure_file(self):
         file_path = filedialog.askopenfilename()
         if file_path:
-            password = ctk.CTkInputDialog(text="Confirm Encryption Key:", title="Zero-Trust Auth").get_input()
+            password = self.get_custom_input("Zero-Trust Auth", "Confirm Encryption Key:")
             if password:
                 try:
                     self.update_status("Committing Asset...", "#F78166")
                     save_file(file_path, password)
                     self.refresh_vault()
-                    messagebox.showinfo("Success", "Asset successfully encrypted and committed to vault.")
+                    messagebox.showinfo("Success", "Asset encrypted and committed.")
                 except Exception as e:
                     messagebox.showerror("Error", str(e))
                     self.update_status("Commit Failed", "#FF7B72")
 
     def ui_extract_file(self, vault_id):
-        password = ctk.CTkInputDialog(text="Enter Extraction Key:", title="Auth Required").get_input()
+        password = self.get_custom_input("Auth Required", "Enter Extraction Key:")
         if password:
             try:
                 self.update_status("Pulling Asset...", "#F78166")
                 extract_file(vault_id, password)
-                messagebox.showinfo("Restored", "Asset has been successfully decrypted.")
+                messagebox.showinfo("Restored", "Asset successfully decrypted.")
                 self.update_status("Extraction Complete", "#3FB950")
             except Exception as e:
                 messagebox.showerror("Denied", "Invalid cryptographic key.")
