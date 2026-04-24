@@ -4,6 +4,7 @@ from core.encryption import encrypt_data, decrypt_data
 from core.auth import generate_salt
 from core.config import VAULT_DIR, VAULT_EXTENSION
 
+# Standardized path for your manifest
 MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
 
 def save_file(file_path, password):
@@ -38,20 +39,32 @@ def extract_file(vault_id, password):
     if not os.path.exists(vault_path):
         raise Exception(f"Encrypted file {vault_id} missing from vault folder.")
 
-    # Read the raw vault file
     with open(vault_path, 'rb') as f:
         salt = f.read(16)
         encrypted_content = f.read()
 
-    # Decrypt using your encryption engine
     decrypted_data = decrypt_data(encrypted_content, password, salt)
 
-    # Save the restored file to your current folder
     output_path = os.path.join(os.getcwd(), original_name)
     with open(output_path, 'wb') as f:
         f.write(decrypted_data)
 
     return output_path
+
+def delete_vault_file(vault_id):
+    """Permanently deletes a file from the vault and updates the manifest."""
+    # 1. Physical Wipe from the vault folder
+    vault_path = os.path.join(VAULT_DIR, vault_id)
+    if os.path.exists(vault_path):
+        os.remove(vault_path)
+    
+    # 2. Manifest Cleanup
+    manifest = load_manifest()
+    if vault_id in manifest:
+        del manifest[vault_id]
+        with open(MANIFEST_PATH, 'w') as f:
+            json.dump(manifest, f, indent=4)
+    return True
 
 def update_manifest(vault_filename, original_name):
     """Logs the relationship between the vault file and the original name."""
@@ -74,28 +87,3 @@ def list_secured_files():
     """Returns a list of all files currently in the vault."""
     manifest = load_manifest()
     return [{"vault_name": k, "original_name": v} for k, v in manifest.items()]
-    def delete_vault_file(vault_id):
-    """Permanently deletes a file from the vault and updates the manifest."""
-    import json
-    vault_path = os.path.join("vault", vault_id)
-    # Ensure this matches your actual manifest filename (usually .vault_manifest)
-    manifest_path = ".vault_manifest" 
-
-    # 1. Physical Wipe
-    if os.path.exists(vault_path):
-        os.remove(vault_path)
-    
-    # 2. Database/Manifest Cleanup
-    if os.path.exists(manifest_path):
-        with open(manifest_path, "r") as f:
-            try:
-                data = json.load(f)
-            except:
-                data = []
-        
-        # Keep everything EXCEPT the file we are deleting
-        new_data = [item for item in data if item['vault_name'] != vault_id]
-        
-        with open(manifest_path, "w") as f:
-            json.dump(new_data, f, indent=4)
-    return True
