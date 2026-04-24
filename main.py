@@ -39,3 +39,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+# Add this inside your main() function in main.py
+parser.add_argument("--extract", type=str, help="Vault ID to decrypt")
+
+# Then add this logic block:
+if args.extract:
+    from core.file_manager import extract_file
+    password = get_password()
+    try:
+        path = extract_file(args.extract, password)
+        print(f"✅ File restored to: {path}")
+    except Exception as e:
+        print(f"❌ Decryption Failed: {e}")
