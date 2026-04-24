@@ -40,7 +40,6 @@ class ComradeApp(ctk.CTk):
         self.tagline_label = ctk.CTkLabel(
             self.header_frame, 
             text="Cyber Operations Module for Resilient Authentication and Data Encryption", 
-             text="Your trusted digital companion that safeguards your data with uncompromising encryption and silent protection.",
             font=ctk.CTkFont(size=13, slant="italic"),
             text_color="#94a3b8"
         )
