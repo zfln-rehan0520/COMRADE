@@ -8,8 +8,8 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("green") 
 
 class FileCard(ctk.CTkFrame):
-    """Component for individual assets with Premium Emerald aesthetics."""
-    def __init__(self, master, vault_id, original_name, extract_callback):
+    """Component for individual assets with Extract and Delete options."""
+    def __init__(self, master, vault_id, original_name, extract_callback, delete_callback):
         super().__init__(master, fg_color="#18181B", corner_radius=6, height=60, border_width=1, border_color="#27272A")
         self.pack(fill="x", padx=10, pady=5)
         
@@ -21,14 +21,63 @@ class FileCard(ctk.CTkFrame):
         self.name_label = ctk.CTkLabel(self, text=original_name, font=("Inter", 13, "bold"), text_color="#F4F4F5")
         self.name_label.pack(side="left", padx=20, expand=True, anchor="w")
         
-        # Action Button (Emerald Green)
-        self.btn_action = ctk.CTkButton(
-            self, text="Extract", width=90, height=32, font=("Inter", 11, "bold"),
+        # --- BUTTON GROUP ---
+        # Extract Button (Emerald)
+        self.btn_extract = ctk.CTkButton(
+            self, text="Extract", width=80, height=32, font=("Inter", 11, "bold"),
             fg_color="#10B981", hover_color="#059669", text_color="#09090B",
             command=lambda: extract_callback(vault_id)
         )
-        self.btn_action.pack(side="right", padx=20)
+        self.btn_extract.pack(side="right", padx=(5, 20))
 
+        # Delete Button (Danger Red)
+        self.btn_delete = ctk.CTkButton(
+            self, text="Delete", width=80, height=32, font=("Inter", 11, "bold"),
+            fg_color="#EF4444", hover_color="#B91C1C", text_color="#FFFFFF",
+            command=lambda: delete_callback(vault_id)
+        )
+        self.btn_delete.pack(side="right", padx=5)
+
+# --- Inside your ComradeApp class ---
+
+    def refresh_vault(self):
+        """Refreshes the file list and wires up both Extract and Delete actions."""
+        for widget in self.container.winfo_children():
+            widget.destroy()
+        
+        files = list_secured_files()
+        if not files:
+            ctk.CTkLabel(self.container, text="No encrypted assets found.", 
+                         font=("Consolas", 13), text_color="#27272A").pack(pady=60)
+        else:
+            for f in files:
+                # We now pass BOTH ui_extract_file and ui_delete_file
+                FileCard(self.container, f['vault_name'], f['original_name'], 
+                         self.ui_extract_file, self.ui_delete_file)
+        self.update_status("Vault Synced", "#34D399")
+
+    def ui_delete_file(self, vault_id):
+        """Handles the deletion flow with a security authorization check."""
+        # Step 1: Authorization
+        auth_key = ctk.CTkInputDialog(
+            text="ENTER MASTER KEY TO AUTHORIZE DELETION:", 
+            title="Security Authorization"
+        ).get_input()
+
+        if auth_key:
+            # Step 2: Final Confirmation
+            confirm = messagebox.askyesno("Final Warning", f"Are you sure you want to permanently wipe {vault_id}?")
+            if confirm:
+                try:
+                    from core.file_manager import delete_vault_file
+                    delete_vault_file(vault_id)
+                    self.refresh_vault()
+                    self.update_status("Asset Wiped", "#EF4444")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Deletion failed: {e}")
+        else:
+            self.update_status("Action Cancelled", "#71717A")
+            
 class ComradeApp(ctk.CTk):
     def __init__(self):
         super().__init__()
