@@ -1,6 +1,6 @@
 import customtkinter as ctk
 from tkinter import filedialog, messagebox, PhotoImage
-from core.file_manager import save_file, extract_file, list_secured_files
+from core.file_manager import save_file, extract_file, list_secured_files, delete_vault_file
 import os
 
 # Emerald Enterprise Theme Logic
@@ -38,46 +38,6 @@ class FileCard(ctk.CTkFrame):
         )
         self.btn_delete.pack(side="right", padx=5)
 
-# --- Inside your ComradeApp class ---
-
-    def refresh_vault(self):
-        """Refreshes the file list and wires up both Extract and Delete actions."""
-        for widget in self.container.winfo_children():
-            widget.destroy()
-        
-        files = list_secured_files()
-        if not files:
-            ctk.CTkLabel(self.container, text="No encrypted assets found.", 
-                         font=("Consolas", 13), text_color="#27272A").pack(pady=60)
-        else:
-            for f in files:
-                # We now pass BOTH ui_extract_file and ui_delete_file
-                FileCard(self.container, f['vault_name'], f['original_name'], 
-                         self.ui_extract_file, self.ui_delete_file)
-        self.update_status("Vault Synced", "#34D399")
-
-    def ui_delete_file(self, vault_id):
-        """Handles the deletion flow with a security authorization check."""
-        # Step 1: Authorization
-        auth_key = ctk.CTkInputDialog(
-            text="ENTER MASTER KEY TO AUTHORIZE DELETION:", 
-            title="Security Authorization"
-        ).get_input()
-
-        if auth_key:
-            # Step 2: Final Confirmation
-            confirm = messagebox.askyesno("Final Warning", f"Are you sure you want to permanently wipe {vault_id}?")
-            if confirm:
-                try:
-                    from core.file_manager import delete_vault_file
-                    delete_vault_file(vault_id)
-                    self.refresh_vault()
-                    self.update_status("Asset Wiped", "#EF4444")
-                except Exception as e:
-                    messagebox.showerror("Error", f"Deletion failed: {e}")
-        else:
-            self.update_status("Action Cancelled", "#71717A")
-            
 class ComradeApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -149,15 +109,20 @@ class ComradeApp(ctk.CTk):
         self.status_text.configure(text=text.upper(), text_color=color)
 
     def refresh_vault(self):
+        """Refreshes the file list and ensures the 'Delete' button is wired up."""
         for widget in self.container.winfo_children():
             widget.destroy()
+        
         files = list_secured_files()
         if not files:
             ctk.CTkLabel(self.container, text="No encrypted assets found in this branch.", 
                          font=("Consolas", 13), text_color="#27272A").pack(pady=60)
         else:
             for f in files:
-                FileCard(self.container, f['vault_name'], f['original_name'], self.ui_extract_file)
+                # FIX: We now pass BOTH ui_extract_file and ui_delete_file to FileCard
+                FileCard(self.container, f['vault_name'], f['original_name'], 
+                         self.ui_extract_file, self.ui_delete_file)
+        
         self.update_status("Vault Synced", "#34D399")
 
     def ui_secure_file(self):
@@ -185,6 +150,27 @@ class ComradeApp(ctk.CTk):
             except Exception as e:
                 messagebox.showerror("Denied", "Invalid cryptographic key.")
                 self.update_status("Auth Failed", "#EF4444")
+
+    def ui_delete_file(self, vault_id):
+        """Handles the deletion flow with security authorization."""
+        # Step 1: Security Authorization
+        auth_key = ctk.CTkInputDialog(
+            text="ENTER MASTER KEY TO AUTHORIZE DELETION:", 
+            title="Security Authorization"
+        ).get_input()
+
+        if auth_key:
+            # Step 2: Final Warning
+            confirm = messagebox.askyesno("Final Warning", f"Permanently wipe {vault_id}?")
+            if confirm:
+                try:
+                    delete_vault_file(vault_id)
+                    self.refresh_vault()
+                    self.update_status("Asset Wiped", "#EF4444")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Deletion failed: {e}")
+        else:
+            self.update_status("Action Cancelled", "#71717A")
 
 if __name__ == "__main__":
     app = ComradeApp()
