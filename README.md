@@ -60,6 +60,7 @@ Action,Command
 List vault contents :- python main.py --list
 Encrypt a file :- python main.py --secure "path/to/file.txt"
 Decrypt/Restore :- python main.py --extract <VAULT_ID>.vault
+Delete File :-  python main.py --remove  <VAULT_ID>.vault
 
 ```
 [!NOTE]
