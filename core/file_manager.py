@@ -52,10 +52,16 @@ def extract_file(vault_id, password):
     return output_path
 
 def delete_vault_file(vault_id):
-    """Permanently deletes a file from the vault and updates the manifest."""
-    # 1. Physical Wipe from the vault folder
+    """Securely wipes and permanently deletes a file from the vault."""
     vault_path = os.path.join(VAULT_DIR, vault_id)
+    
     if os.path.exists(vault_path):
+        # SECURE WIPE: Overwrite with random data before deletion
+        file_size = os.path.getsize(vault_path)
+        with open(vault_path, "wb") as f:
+            f.write(os.urandom(file_size))
+        
+        # Physical Wipe
         os.remove(vault_path)
     
     # 2. Manifest Cleanup
