@@ -1,40 +1,37 @@
 import os
 from colorama import Fore, Style, init
 
-# Initialize colorama for cross-platform color support
+# Initialize colorama
 init(autoreset=True)
 
-# Emerald & Zinc Industry Palette
-PRIMARY = Fore.GREEN 
-SECONDARY = Fore.WHITE
-DIM = Fore.BLACK + Style.BRIGHT
-ERROR = Fore.RED
-
 def display_banner():
-    """Emerald minimalist banner - Clean & Industrial"""
+    """Restored classic boxed blue banner"""
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"\n{PRIMARY}{Style.BRIGHT}  🛡️  COMRADE v1.0")
-    print(f"{DIM}  Cyber Operations Module for Resilient Authentication and Data Encryption")
-    print(f"{DIM}  {'-' * 70}")
+    print(f"{Fore.CYAN}{Style.BRIGHT}" + "╔" + "═" * 45 + "╗")
+    print(f"{Fore.CYAN}{Style.BRIGHT}║ {Fore.WHITE}       🛡️  COMRADE: ZERO-TRUST VAULT 🛡️       {Fore.CYAN}║")
+    print(f"{Fore.CYAN}{Style.BRIGHT}" + "╚" + "═" * 45 + "╝")
+    print(f"\n{Style.DIM}{Fore.WHITE}                Secured Files")
 
 def show_vault(files):
-    """Emerald data table for secured assets"""
+    """Restored original classic table layout"""
     if not files:
-        print(f"\n{ERROR}  [!] VAULT EMPTY: No secured assets found.")
+        print(f"\n{Fore.RED}  [!] No files found in the vault.")
         return
 
-    print(f"\n  {PRIMARY}{'VAULT IDENTIFIER':<30} | {'PROTECTED FILENAME':<40}")
-    print(f"  {DIM}{'═' * 72}")
+    # Table Header
+    print(f"{Fore.WHITE}┌" + "─" * 25 + "┬" + "─" * 35 + "┐")
+    print(f"{Fore.WHITE}│ {Style.BRIGHT}Vault ID                {Fore.WHITE}│ {Style.BRIGHT}Original Filename                 {Fore.WHITE}│")
+    print(f"{Fore.WHITE}├" + "─" * 25 + "┼" + "─" * 35 + "┤")
 
+    # Data Rows
     for f in files:
-        v_id = f['vault_name']
-        orig = f['original_name']
-        # White for ID, Green for the filename asset
-        print(f"  {SECONDARY}{v_id:<30} {DIM}| {PRIMARY}{orig:<40}")
-    
-    print(f"  {DIM}{'═' * 72}")
-    print(f"\n  {PRIMARY}● {SECONDARY}SYSTEM STATUS: {PRIMARY}NOMINAL / VAULT SYNCED\n")
+        vault_id = f['vault_name']
+        original = f['original_name']
+        print(f"{Fore.WHITE}│ {Fore.WHITE}{vault_id:<23} {Fore.WHITE}│ {Fore.GREEN}{original:<33} {Fore.WHITE}│")
 
-def get_password(prompt_text="ENTER MASTER KEY: "):
-    """Professional masked input prompt"""
-    return input(f"  {SECONDARY}{prompt_text}{PRIMARY}")
+    print(f"{Fore.WHITE}└" + "─" * 25 + "┴" + "─" * 35 + "┘")
+    print(f"\n{Fore.GREEN}(venv) {Fore.WHITE}PS C:\\Users\\pc\\COMRADE>")
+
+def get_password(prompt_text="Enter Master Password: "):
+    """Original password prompt"""
+    return input(f"\n{Fore.YELLOW}{prompt_text}{Fore.CYAN}")
