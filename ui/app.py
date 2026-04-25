@@ -84,7 +84,7 @@ class ComradeApp(ctk.CTk):
 
         self.version_tag = ctk.CTkLabel(
             self.branding_box, 
-            text=" comrade-V1.0 | DESIGNED BY MOHAMMED REHAN { zfln-rehan0520 }",
+            text=" comrade-V1.0 | DESIGNED BY MOHAMMED REHAN { Github_id :- zfln-rehan0520 }",
             font=("Consolas", 11, "bold"), 
             text_color="#00FFFF"
         )
