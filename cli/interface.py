@@ -5,13 +5,30 @@ from core.file_manager import list_secured_files # Import the data fetcher
 # Initialize colorama
 init(autoreset=True)
 
+from colorama import Fore, Style, init
+
+init(autoreset=True)
+
 def display_banner():
-    """Classic Blue Box Banner"""
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"{Fore.CYAN}{Style.BRIGHT}╔" + "═" * 50 + "╗")
-    print(f"{Fore.CYAN}{Style.BRIGHT}║ {Fore.WHITE}🛡️ COMRADE: A Brother That Guards Your Data 🛡️       {Fore.CYAN}║")
-    print(f"{Fore.CYAN}{Style.BRIGHT}╚" + "═" * 50 + "╝")
-    print(f"\n{Style.DIM}{Fore.WHITE}                Secured Files")
+    """Renders the official COMRADE Cyber-Operations Branding."""
+    cyan = Fore.CYAN
+    white = Fore.WHITE
+    dim = Style.DIM
+    reset = Style.RESET_ALL
+
+    print(f"\n{cyan}{'='*85}")
+    print(f"{cyan}  ██████╗ ██████╗ ███╗   ███╗██████╗  █████╗ ██████╗ ███████╗")
+    print(f"{cyan} ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+    print(f"{cyan} ██║     ██║   ██║██╔████╔██║██████╔╝███████║██║  ██║█████╗  ")
+    print(f"{cyan} ██║     ██║   ██║██║╚██╔╝██║██╔══██╗██╔══██║██║  ██║██╔══╝  ")
+    print(f"{cyan} ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║  ██║██║  ██║██████╔╝███████╗")
+    print(f"{cyan}  ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝")
+    print(f"{cyan}{'='*85}")
+    
+    # Metadata Branding (Matches your GUI exactly)
+    print(f"{white}  Cyber Operations Module for Resilient Authentication, Defense and Encryption")
+    print(f"  {cyan}comrade-V1.0 {white}| {dim}DESIGNED BY {cyan}MOHAMMED REHAN {white}{{ {dim}Github_id :- {cyan}zfln-rehan0520 {white}}}")
+    print(f"{cyan}{'='*85}\n")
 
 def show_vault(files=None):
     """Refined Classic Table - Now fetches data automatically if missing"""
