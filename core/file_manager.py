@@ -59,23 +59,48 @@ def extract_file(vault_id, password):
     return output_path
 
 def delete_vault_file(vault_id, password):
-    """Refuses wipe unless password is provided (prevents simple bypass)."""
+    """
+    STRICT AUTHORIZATION: Only wipes the file if the Master Key is valid.
+    """
     if not password:
-        raise Exception("Authorization Required.")
+        raise Exception("Authentication required.")
 
-    vault_path = os.path.join(VAULT_DIR, vault_id)
+    # 1. VALIDATION STEP
+    # We try to extract the file metadata using the password.
+    # If the password is wrong, load_manifest (if encrypted) or a 
+    # test decryption will fail.
+    try:
+        manifest = load_manifest()
+        if vault_id not in manifest:
+            raise Exception("Asset ID not found.")
+            
+        # We perform a dummy check: can we actually 'see' the data?
+        # If your manifest is plain text, we check a specific file's validity.
+        vault_path = os.path.join(VAULT_DIR, vault_id)
+        with open(vault_path, 'rb') as f:
+            salt = f.read(16)
+            encrypted_content = f.read()
+        
+        # Test decryption: If this fails, it raises an exception
+        decrypt_data(encrypted_content, password, salt)
+        
+    except Exception:
+        # If decryption fails, the key is wrong. STOP HERE.
+        raise Exception("AUTHORIZATION CRITICAL: Invalid Master Key. Access Denied.")
+
+    # 2. WIPE STEP (Only happens if the code above didn't crash)
     if os.path.exists(vault_path):
-        # Secure Wipe
         size = os.path.getsize(vault_path)
         with open(vault_path, "wb") as f:
-            f.write(os.urandom(size))
+            f.write(os.urandom(size)) # Physical overwrite
         os.remove(vault_path)
     
-    manifest = load_manifest()
+    # 3. MANIFEST CLEANUP
     if vault_id in manifest:
         del manifest[vault_id]
         with open(MANIFEST_PATH, 'w') as f:
             json.dump(manifest, f, indent=4)
+            
     return True
 
 def list_secured_files():
