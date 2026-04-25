@@ -5,12 +5,12 @@ import os
 
 # Emerald Enterprise Theme Logic
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("green") 
+ctk.set_default_color_theme("Cyan") 
 
 class FileCard(ctk.CTkFrame):
     """Component for individual assets with Extract and Delete options."""
     def __init__(self, master, vault_id, original_name, extract_callback, delete_callback):
-        super().__init__(master, fg_color="#18181B", corner_radius=6, height=60, border_width=1, border_color="#27272A")
+        super().__init__(master, fg_color="#18181B", corner_radius=6, height=60, border_width=1, border_color="#0fbdbd")
         self.pack(fill="x", padx=10, pady=5)
         
         # ID Section
