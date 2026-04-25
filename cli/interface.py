@@ -27,7 +27,7 @@ def display_banner():
     
     # Metadata Branding (Matches your GUI exactly)
     print(f"{white}  Cyber Operations Module for Resilient Authentication, Defense and Encryption")
-    print(f"  {cyan}comrade-V1.0 {white}| {dim}DESIGNED BY {cyan}MOHAMMED REHAN {white}{{ {dim}Github_id :- {cyan}zfln-rehan0520 {white}}}")
+    print(f"  {cyan}comrade-V1.0 {white}| DESIGNED BY {cyan}MOHAMMED REHAN {white}{ | {Github_id :- {cyan}zfln-rehan0520 {white}}}")
     print(f"{cyan}{'='*85}\n")
 
 def show_vault(files=None):
