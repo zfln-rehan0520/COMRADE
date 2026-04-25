@@ -25,7 +25,7 @@ class FileCard(ctk.CTkFrame):
         # Extract Button (Emerald)
         self.btn_extract = ctk.CTkButton(
             self, text="Extract", width=70, height=30, font=("Inter", 11, "bold"),
-            fg_color="#1F75FE", hover_color="#059669", text_color="#09090B",
+            fg_color="#1F75FE", hover_color="#059669", text_color="#FFFFFF",
             command=lambda: extract_callback(vault_id)
         )
         self.btn_extract.pack(side="right", padx=(5, 20))
