@@ -45,7 +45,7 @@ class ComradeApp(ctk.CTk):
         super().__init__()
         
         # 1. WINDOW CONFIG
-        self.title("COMRADE | Data Guard")
+        self.title("COMRADE | A Brother That Guards Your Data")
         self.geometry("1100x750")
         self.configure(fg_color="#09090B")
 
@@ -57,24 +57,45 @@ class ComradeApp(ctk.CTk):
         except: 
             self.icon_img = None
 
-        # 3. HEADER & TOOLBAR
+       # 3. HEADER & TOOLBAR
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.pack(fill="x", padx=40, pady=(40, 20))
-        
-        ctk.CTkLabel(self.header, text="COMRADE", font=("Inter", 38, "bold"), 
-                     text_color="#00FFFF").pack(side="left")
 
+        # Main Title
+        self.title_brand = ctk.CTkLabel(
+            self.header, 
+            text="COMRADE", 
+            font=("Inter", 42, "bold"), 
+            text_color="#00FFFF"
+        )
+        self.title_brand.pack(side="left", anchor="n")
+
+        # Branding Metadata Block
+        self.branding_box = ctk.CTkFrame(self.header, fg_color="transparent")
+        self.branding_box.pack(side="left", padx=30)
+
+        self.full_name = ctk.CTkLabel(
+            self.branding_box, 
+            text="Cyber Operations Module for Resilient Authentication, Defense and Encryption",
+            font=("Inter", 13), 
+            text_color="#F4F4F5"
+        )
+        self.full_name.pack(anchor="w")
+
+        self.version_tag = ctk.CTkLabel(
+            self.branding_box, 
+            text=" comrade-V1.0 | DESIGNED BY MOHAMMED REHAN { zfln-rehan0520 }",
+            font=("Consolas", 11, "bold"), 
+            text_color="#00FFFF"
+        )
+        self.version_tag.pack(anchor="w")
+
+        # --- TOOLBAR ---
         self.toolbar = ctk.CTkFrame(self, fg_color="#18181B", height=80, corner_radius=8,
                                     border_width=1, border_color="#27272A")
         self.toolbar.pack(fill="x", padx=40, pady=10)
         
-        ctk.CTkButton(self.toolbar, text="+ Secure New Asset", fg_color="#00FFFF", 
-                      text_color="#000000", font=("Inter", 13, "bold"), height=45,
-                      command=self.ui_secure_file).pack(side="left", padx=20, pady=15)
-        
-        ctk.CTkButton(self.toolbar, text="Rescan Engine", fg_color="#27272A", 
-                      text_color="#F4F4F5", height=45,
-                      command=self.refresh_vault).pack(side="right", padx=20, pady=15)
+        # ... (keep your existing buttons here) ...
 
         # 4. ENCRYPTED REPOSITORY CONTAINER
         self.container = ctk.CTkScrollableFrame(
