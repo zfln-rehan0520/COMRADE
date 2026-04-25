@@ -48,12 +48,12 @@ class ComradeApp(ctk.CTk):
         self.configure(fg_color="#09090B")
 
         # Icon handling (Fails safely if logo is missing)
+       # Force the icon on the main window and all future popups
         try:
-            icon_path = os.path.join(os.getcwd(), "assets", "logo.png")
-            if os.path.exists(icon_path):
-                img = PhotoImage(file=icon_path)
-                self.iconphoto(False, img)
-        except:
+            self.icon_path = os.path.join(os.getcwd(), "assets", "logo.png")
+            self.icon_img = PhotoImage(file=self.icon_path)
+            self.iconphoto(True, self.icon_img) # The 'True' here makes it apply to all popups
+        except Exception:
             pass
 
         # --- HEADER ---
