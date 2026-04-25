@@ -60,7 +60,7 @@ class ComradeApp(ctk.CTk):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.pack(fill="x", padx=40, pady=(40, 20))
 
-        self.title_brand = ctk.CTkLabel(self.header, text="COMRADE", font=ctk.CTkFont(size=38, weight="bold"), text_color="#00FFFF")
+        self.title_brand = ctk.CTkLabel(self.header, text="COMRADE", font=ctk.CTkFont(size=38, weight="bold"), text_color="#1F75FE")
         self.title_brand.pack(side="left")
         
         self.meta_info = ctk.CTkFrame(self.header, fg_color="transparent")
