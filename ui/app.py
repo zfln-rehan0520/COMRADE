@@ -5,7 +5,7 @@ import os
 
 # Emerald Enterprise Theme Logic
 ctk.set_appearance_mode("Dark")
-ctk.set_default_color_theme("green") 
+ctk.set_default_color_theme("dark-blue") 
 
 class FileCard(ctk.CTkFrame):
     """Component for individual assets with Extract and Delete options."""
