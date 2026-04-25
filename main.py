@@ -1,12 +1,31 @@
 import sys
 import argparse
+import os
 from colorama import Fore, init
 from cli.interface import display_banner, show_vault, get_password
 from core.file_manager import save_file, extract_file, delete_vault_file, list_secured_files
+from core.config import VAULT_DIR
 
 init(autoreset=True)
 
+# Global lock to prevent deletion by keeping a file handle open
+VAULT_HANDLE = None
+
+def apply_operational_lock():
+    """Forces Windows to mark the vault as 'In Use' to block external deletion."""
+    global VAULT_HANDLE
+    manifest_path = os.path.join(VAULT_DIR, ".vault_manifest")
+    if os.path.exists(manifest_path):
+        try:
+            # Opening in 'a' mode (append) creates a persistent lock in Windows
+            VAULT_HANDLE = open(manifest_path, "a")
+        except:
+            pass
+
 def main():
+    # 1. Engage the lock immediately
+    apply_operational_lock()
+
     parser = argparse.ArgumentParser(description="COMRADE: Secure Local Vault")
     parser.add_argument("--secure", type=str, help="Path to file")
     parser.add_argument("--list", action="store_true", help="List vault")
@@ -19,13 +38,15 @@ def main():
         password = get_password("CREATE MASTER KEY: ")
         try:
             name = save_file(args.secure, password)
+            # Re-engage lock if folder was just created
+            apply_operational_lock() 
             print(f"✅ Secured as: {name}")
         except Exception as e:
             print(f"❌ Error: {e}")
 
     elif args.list:
         display_banner()
-        files = list_secured_files() # No password needed for listing
+        files = list_secured_files()
         if not files:
             print(f"{Fore.YELLOW}[!] Vault is empty.")
         else:
@@ -46,9 +67,17 @@ def main():
         password = get_password("ENTER MASTER KEY TO WIPE: ")
         if password:
             try:
+                # We must briefly close the handle to allow the app itself to delete
+                global VAULT_HANDLE
+                if VAULT_HANDLE: VAULT_HANDLE.close()
+                
                 delete_vault_file(args.remove, password)
+                
+                # Re-lock after deletion
+                apply_operational_lock()
                 print(f"🗑️  Asset {args.remove} erased.")
             except Exception as e:
+                apply_operational_lock()
                 print(f"❌ Denied: {e}")
 
     else:
