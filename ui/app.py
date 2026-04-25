@@ -20,65 +20,89 @@ class FileCard(ctk.CTkFrame):
 class ComradeApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        
+        # 1. WINDOW CONFIG
         self.title("COMRADE | Data Guard")
         self.geometry("1100x750")
         self.configure(fg_color="#09090B")
+
+        # 2. LOAD ASSETS
+        try:
+            self.icon_path = os.path.join(os.getcwd(), "assets", "logo.png")
+            self.icon_img = PhotoImage(file=self.icon_path)
+            self.iconphoto(True, self.icon_img)
+        except: self.icon_img = None
+
+        # 3. HEADER & TOOLBAR
+        self.header = ctk.CTkFrame(self, fg_color="transparent")
+        self.header.pack(fill="x", padx=40, pady=(40, 20))
+        ctk.CTkLabel(self.header, text="COMRADE", font=("Inter", 38, "bold"), text_color="#00FFFF").pack(side="left")
+
+        self.toolbar = ctk.CTkFrame(self, fg_color="#18181B", height=80, corner_radius=8)
+        self.toolbar.pack(fill="x", padx=40, pady=10)
         
-        # Header & Toolbar code (Keep your current styling here)
-        # ...
+        ctk.CTkButton(self.toolbar, text="+ Secure New Asset", fg_color="#00FFFF", text_color="#000000", 
+                      command=self.ui_secure_file).pack(side="left", padx=20, pady=15)
         
-        # Initialize the list immediately since listing is public
+        ctk.CTkButton(self.toolbar, text="Rescan Engine", fg_color="#27272A", 
+                      command=self.refresh_vault).pack(side="right", padx=20, pady=15)
+
+        # 4. CREATE CONTAINER (Must happen before refresh_vault)
+        self.container = ctk.CTkScrollableFrame(self, fg_color="#09090B", label_text="ENCRYPTED REPOSITORY", 
+                                                label_text_color="#F4F4F5", border_width=1, border_color="#18181B")
+        self.container.pack(fill="both", expand=True, padx=40, pady=20)
+
+        # 5. FOOTER
+        self.footer = ctk.CTkFrame(self, fg_color="transparent")
+        self.footer.pack(fill="x", padx=40, pady=(0, 20))
+        self.status_text = ctk.CTkLabel(self.footer, text="ENGINE STANDBY", font=("Consolas", 11), text_color="#71717A")
+        self.status_text.pack(side="left", padx=10)
+
+        # 6. NOW INITIALIZE REPOSITORY
         self.refresh_vault()
 
+    def update_status(self, text, color="#71717A"):
+        self.status_text.configure(text=text.upper(), text_color=color)
+
     def refresh_vault(self):
-        """Shows files immediately."""
-        # Clear container
-        # ... 
+        """Clears and reloads the file cards."""
+        for widget in self.container.winfo_children():
+            widget.destroy()
+        
         files = list_secured_files()
         if not files:
             self.update_status("Repository Empty", "#71717A")
+            ctk.CTkLabel(self.container, text="No assets found.", font=("Consolas", 13), text_color="#27272A").pack(pady=60)
         else:
             for f in files:
                 FileCard(self.container, f['vault_name'], f['original_name'], self.ui_extract_file, self.ui_delete_file)
             self.update_status("Engine Active", "#00FFFF")
 
+    def ui_secure_file(self):
+        path = filedialog.askopenfilename()
+        if path:
+            pw = ctk.CTkInputDialog(text="Create Key:", title="Auth").get_input()
+            if pw:
+                save_file(path, pw)
+                self.refresh_vault()
+
     def ui_extract_file(self, vault_id):
-        """Decrypts asset with Master Key validation."""
         dialog = ctk.CTkInputDialog(text="ENTER MASTER KEY:", title="Auth Required")
-        # Direct Injection fix for the icon/theme
-        try: dialog.after(10, lambda: dialog.iconphoto(False, self.icon_img))
-        except: pass
-        
-        password = dialog.get_input()
-        if password:
+        pw = dialog.get_input()
+        if pw:
             try:
-                self.update_status("Decrypting Asset...", "#00FFFF")
-                extract_file(vault_id, password)
-                messagebox.showinfo("Success", "Asset decrypted to current directory.")
-                self.update_status("Extraction Success", "#00FFFF")
-            except Exception:
-                messagebox.showerror("Denied", "CRITICAL: Invalid Master Key.")
-                self.update_status("Auth Failed", "#EF4444")
+                extract_file(vault_id, pw)
+                messagebox.showinfo("Success", "Decrypted.")
+            except:
+                messagebox.showerror("Denied", "Invalid Key.")
 
     def ui_delete_file(self, vault_id):
-        """Securely wipes asset ONLY if Master Key is valid."""
-        dialog = ctk.CTkInputDialog(text="ENTER MASTER KEY TO AUTHORIZE WIPE:", title="Security Authorization")
-        try: dialog.after(10, lambda: dialog.iconphoto(False, self.icon_img))
-        except: pass
-
-        password = dialog.get_input()
-        if password:
-            # Final Safety Confirmation
-            confirm = messagebox.askyesno("Final Warning", f"Are you sure you want to permanently erase {vault_id}?")
-            if confirm:
+        dialog = ctk.CTkInputDialog(text="ENTER MASTER KEY TO WIPE:", title="Security")
+        pw = dialog.get_input()
+        if pw:
+            if messagebox.askyesno("Final Warning", "Permanently erase?"):
                 try:
-                    self.update_status("Wiping Asset...", "#EF4444")
-                    # This now calls our new core logic that validates the password!
-                    delete_vault_file(vault_id, password)
+                    delete_vault_file(vault_id, pw)
                     self.refresh_vault()
-                    messagebox.showinfo("Wiped", "Asset has been physically erased and removed from manifest.")
                 except Exception as e:
                     messagebox.showerror("Access Denied", str(e))
-                    self.update_status("Wipe Blocked", "#EF4444")
-        else:
-            self.update_status("Action Aborted", "#71717A")
