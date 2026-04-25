@@ -40,17 +40,24 @@ def main():
             print(f"❌ Decryption Failed: {e}")
 
     
-    elif args.remove:
+   elif args.remove:
         display_banner()
-        confirm = input(f"⚠️  Are you sure you want to delete {args.remove}? (y/n): ")
-        if confirm.lower() == 'y':
-            try:
-                delete_vault_file(args.remove)
-                print(f"🗑️  Asset {args.remove} has been permanently erased.")
-            except Exception as e:
-                print(f"❌ Deletion Failed: {e}")
+        
+        # 🛡️ ADD THIS: MASTER KEY AUTHORIZATION
+        print(f"{Fore.RED}⚠️  SECURITY AUTHORIZATION REQUIRED")
+        auth_key = get_password("ENTER MASTER KEY TO AUTHORIZE WIPE: ")
+        
+        # Only proceed if they actually typed a key
+        if auth_key:
+            confirm = input(f"Are you sure you want to delete {args.remove}? (y/n): ")
+            if confirm.lower() == 'y':
+                try:
+                    delete_vault_file(args.remove)
+                    print(f"🗑️  Asset {args.remove} has been permanently erased.")
+                except Exception as e:
+                    print(f"❌ Deletion Failed: {e}")
         else:
-            print("❌ Operation cancelled.")
+            print(f"{Fore.YELLOW}❌ Deletion cancelled: No key provided.")
 
    
     else:
