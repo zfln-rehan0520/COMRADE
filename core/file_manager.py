@@ -23,15 +23,17 @@ def save_file(file_path, password):
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    update_manifest(vault_filename, filename)
+    # FIX: Passing password to update_manifest
+    update_manifest(vault_filename, filename, password)
     return vault_filename
 
 def extract_file(vault_id, password):
     """Decrypts a file from the vault and restores it to the current directory."""
-    manifest = load_manifest()
+    # FIX: Passing password to load_manifest
+    manifest = load_manifest(password)
     
     if vault_id not in manifest:
-        raise Exception(f"Vault ID '{vault_id}' not found in the manifest.")
+        raise Exception(f"Vault ID '{vault_id}' not found or incorrect Master Key.")
 
     original_name = manifest[vault_id]
     vault_path = os.path.join(VAULT_DIR, vault_id)
@@ -51,7 +53,7 @@ def extract_file(vault_id, password):
 
     return output_path
 
-def delete_vault_file(vault_id):
+def delete_vault_file(vault_id, password=None):
     """Securely wipes and permanently deletes a file from the vault."""
     vault_path = os.path.join(VAULT_DIR, vault_id)
     
@@ -61,35 +63,47 @@ def delete_vault_file(vault_id):
         with open(vault_path, "wb") as f:
             f.write(os.urandom(file_size))
         
-        # Physical Wipe
         os.remove(vault_path)
     
-    # 2. Manifest Cleanup
-    manifest = load_manifest()
-    if vault_id in manifest:
-        del manifest[vault_id]
-        with open(MANIFEST_PATH, 'w') as f:
-            json.dump(manifest, f, indent=4)
+    # 2. Manifest Cleanup (Requires password to rewrite the encrypted file)
+    if password:
+        manifest = load_manifest(password)
+        if vault_id in manifest:
+            del manifest[vault_id]
+            # Re-save the manifest without the deleted entry
+            save_encrypted_manifest(manifest, password)
     return True
 
-def update_manifest(vault_filename, original_name):
-    """Logs the relationship between the vault file and the original name."""
-    manifest = load_manifest()
+def update_manifest(vault_filename, original_name, password):
+    """Logs the relationship and saves it encrypted."""
+    manifest = load_manifest(password)
     manifest[vault_filename] = original_name
-    with open(MANIFEST_PATH, 'w') as f:
-        json.dump(manifest, f, indent=4)
+    save_encrypted_manifest(manifest, password)
 
-def load_manifest():
-    """Loads the file index."""
-    if not os.path.exists(MANIFEST_PATH):
+def save_encrypted_manifest(manifest, password):
+    """Helper to encrypt the manifest file."""
+    salt = generate_salt()
+    json_data = json.dumps(manifest).encode('utf-8')
+    encrypted_manifest = encrypt_data(json_data, password, salt)
+    
+    with open(MANIFEST_PATH, 'wb') as f:
+        f.write(salt + encrypted_manifest)
+
+def load_manifest(password=None):
+    """FIXED: Now takes 1 positional argument (password)."""
+    if not os.path.exists(MANIFEST_PATH) or not password:
         return {}
-    with open(MANIFEST_PATH, 'r') as f:
+    
+    with open(MANIFEST_PATH, 'rb') as f:
         try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return {}
+            salt = f.read(16)
+            encrypted_content = f.read()
+            decrypted_json = decrypt_data(encrypted_content, password, salt)
+            return json.loads(decrypted_json.decode('utf-8'))
+        except Exception:
+            return {} # Returns empty if decryption fails
 
-def list_secured_files():
-    """Returns a list of all files currently in the vault."""
-    manifest = load_manifest()
+def list_secured_files(password):
+    """Returns a list of all files currently in the vault (requires key)."""
+    manifest = load_manifest(password)
     return [{"vault_name": k, "original_name": v} for k, v in manifest.items()]
