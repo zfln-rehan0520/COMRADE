@@ -1,3 +1,12 @@
+import ctypes
+import platform
+
+def hide_vault_folder(path):
+    """Sets folder to System+Hidden so it disappears from File Explorer."""
+    if platform.system() == "Windows":
+        # FILE_ATTRIBUTE_HIDDEN (0x02) + FILE_ATTRIBUTE_SYSTEM (0x04)
+        ctypes.windll.kernel32.SetFileAttributesW(path, 0x02 | 0x04)
+        
 import os
 import json
 from core.encryption import encrypt_data, decrypt_data
