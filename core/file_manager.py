@@ -36,41 +36,41 @@ def load_manifest():
         return {}
 
 def save_file(file_path, password):
-    """
-    ENCRYPTION ENGINE: Secures asset, updates manifest, and triggers Stealth Mode.
-    """
+    """Encrypts a file, logs it in the manifest, and hides the vault folder/files."""
+    
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
+    
+    # Hide the main directory
+    hide_vault_folder(VAULT_DIR)
 
-    # Read original asset
     with open(file_path, 'rb') as f:
         data = f.read()
 
-    # Cryptographic Setup
     salt = generate_salt()
     encrypted_content = encrypt_data(data, password, salt)
     
-    # Generate unique vault signature
-    vault_id = f"{secrets.token_hex(8)}{VAULT_EXTENSION}"
-    vault_path = os.path.join(VAULT_DIR, vault_id)
+    filename = os.path.basename(file_path)
+    vault_filename = f"{os.urandom(8).hex()}{VAULT_EXTENSION}"
+    vault_path = os.path.join(VAULT_DIR, vault_filename)
 
-    # Commit encrypted blob to disk
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    # Manifest Update with Stealth Toggle
+    # --- NEW: Hide the individual encrypted .vault file ---
+    hide_vault_folder(vault_path)
+
+    # Update the manifest
     manifest = load_manifest()
-    manifest[vault_id] = os.path.basename(file_path)
+    manifest[vault_filename] = filename
     
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
         json.dump(manifest, f, indent=4)
     
-    # Re-apply Stealth attributes
-    hide_vault_folder(VAULT_DIR)
     hide_vault_folder(MANIFEST_PATH)
     
-    return vault_id
+    return vault_filename
 
 def extract_file(vault_id, password):
     """DECRYPTION ENGINE: Restores asset to CWD. Validates key via AES check."""
