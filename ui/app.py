@@ -43,21 +43,42 @@ class ComradeApp(ctk.CTk):
             self.update_status("Engine Active", "#00FFFF")
 
     def ui_extract_file(self, vault_id):
-        pw = ctk.CTkInputDialog(text="Master Key:", title="Auth").get_input()
-        if pw:
+        """Decrypts asset with Master Key validation."""
+        dialog = ctk.CTkInputDialog(text="ENTER MASTER KEY:", title="Auth Required")
+        # Direct Injection fix for the icon/theme
+        try: dialog.after(10, lambda: dialog.iconphoto(False, self.icon_img))
+        except: pass
+        
+        password = dialog.get_input()
+        if password:
             try:
-                extract_file(vault_id, pw)
-                messagebox.showinfo("Success", "Decrypted.")
-            except:
-                messagebox.showerror("Denied", "Wrong Key.")
+                self.update_status("Decrypting Asset...", "#00FFFF")
+                extract_file(vault_id, password)
+                messagebox.showinfo("Success", "Asset decrypted to current directory.")
+                self.update_status("Extraction Success", "#00FFFF")
+            except Exception:
+                messagebox.showerror("Denied", "CRITICAL: Invalid Master Key.")
+                self.update_status("Auth Failed", "#EF4444")
 
     def ui_delete_file(self, vault_id):
-        pw = ctk.CTkInputDialog(text="Authorize Wipe (Enter Key):", title="Security").get_input()
-        if pw:
-            try:
-                delete_vault_file(vault_id, pw)
-                self.refresh_vault()
-            except Exception as e:
-                messagebox.showerror("Error", str(e))
+        """Securely wipes asset ONLY if Master Key is valid."""
+        dialog = ctk.CTkInputDialog(text="ENTER MASTER KEY TO AUTHORIZE WIPE:", title="Security Authorization")
+        try: dialog.after(10, lambda: dialog.iconphoto(False, self.icon_img))
+        except: pass
 
-    # Add your ui_secure_file and update_status functions here
+        password = dialog.get_input()
+        if password:
+            # Final Safety Confirmation
+            confirm = messagebox.askyesno("Final Warning", f"Are you sure you want to permanently erase {vault_id}?")
+            if confirm:
+                try:
+                    self.update_status("Wiping Asset...", "#EF4444")
+                    # This now calls our new core logic that validates the password!
+                    delete_vault_file(vault_id, password)
+                    self.refresh_vault()
+                    messagebox.showinfo("Wiped", "Asset has been physically erased and removed from manifest.")
+                except Exception as e:
+                    messagebox.showerror("Access Denied", str(e))
+                    self.update_status("Wipe Blocked", "#EF4444")
+        else:
+            self.update_status("Action Aborted", "#71717A")
