@@ -76,7 +76,7 @@ class ComradeApp(ctk.CTk):
         self.toolbar.pack(fill="x", padx=40, pady=10)
         
         self.btn_lock = ctk.CTkButton(self.toolbar, text="+ Secure New Asset", font=("Inter", 13, "bold"),
-                                      fg_color="#00FFFF", hover_color="#00adad", text_color="#FFFFFF",
+                                      fg_color="#0fbdbd", hover_color="#00adad", text_color="#FFFFFF",
                                       height=48, width=200, command=self.ui_secure_file)
         self.btn_lock.pack(side="left", padx=20, pady=15)
 
