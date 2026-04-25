@@ -7,15 +7,49 @@ ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
 class FileCard(ctk.CTkFrame):
+    """Refined component for individual assets."""
     def __init__(self, master, vault_id, original_name, extract_cb, delete_cb):
-        super().__init__(master, fg_color="#18181B", corner_radius=6, border_width=1, border_color="#00FFFF")
-        self.pack(fill="x", padx=10, pady=5)
+        # Increased height and better border handling
+        super().__init__(master, fg_color="#18181B", corner_radius=8, height=70, 
+                         border_width=1, border_color="#00FFFF")
+        self.pack(fill="x", padx=15, pady=8) # Added more 'breathing room' between cards
+        self.pack_propagate(False) # Forces the frame to stay at height=70
+
+        # ID Section (Dimmed)
+        self.id_label = ctk.CTkLabel(self, text=vault_id[:12]+"...", 
+                                     font=("Consolas", 12), text_color="#71717A")
+        self.id_label.pack(side="left", padx=(20, 10))
         
-        ctk.CTkLabel(self, text=vault_id[:12]+"...", font=("Consolas", 12), text_color="#71717A").pack(side="left", padx=20)
-        ctk.CTkLabel(self, text=original_name, font=("Inter", 13, "bold"), text_color="#F4F4F5").pack(side="left", padx=20, expand=True, anchor="w")
+        # Name Section (Prominent)
+        self.name_label = ctk.CTkLabel(self, text=original_name, 
+                                       font=("Inter", 14, "bold"), text_color="#F4F4F5")
+        self.name_label.pack(side="left", padx=20, expand=True, anchor="w")
         
-        ctk.CTkButton(self, text="Extract", width=70, fg_color="#00FFFF", text_color="#000000", command=lambda: extract_cb(vault_id)).pack(side="right", padx=5)
-        ctk.CTkButton(self, text="Delete", width=70, fg_color="#EF4444", command=lambda: delete_cb(vault_id)).pack(side="right", padx=20)
+        # --- BUTTON GROUP (Right Aligned) ---
+        # Extract Button (Cyan)
+        self.btn_extract = ctk.CTkButton(
+            self, text="Extract", width=85, height=32, font=("Inter", 12, "bold"),
+            fg_color="#00FFFF", hover_color="#00CCCC", text_color="#000000",
+            command=lambda: extract_cb(vault_id)
+        )
+        self.btn_extract.pack(side="right", padx=(5, 20))
+
+        # Delete Button (Danger Red)
+        self.btn_delete = ctk.CTkButton(
+            self, text="Delete", width=85, height=32, font=("Inter", 12, "bold"),
+            fg_color="#EF4444", hover_color="#B91C1C", text_color="#FFFFFF",
+            command=lambda: delete_cb(vault_id)
+        )
+        self.btn_delete.pack(side="right", padx=5)
+
+# --- Inside ComradeApp.__init__ ---
+# Update your container definition to have better internal spacing
+self.container = ctk.CTkScrollableFrame(
+    self, fg_color="#09090B", label_text="ENCRYPTED REPOSITORY", 
+    label_font=("Inter", 14, "bold"), label_text_color="#00FFFF",
+    border_width=1, border_color="#18181B"
+)
+self.container.pack(fill="both", expand=True, padx=40, pady=(10, 20))
 
 class ComradeApp(ctk.CTk):
     def __init__(self):
