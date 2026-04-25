@@ -152,4 +152,31 @@ class ComradeApp(ctk.CTk):
                     messagebox.showerror("Error", str(e))
                     self.update_status("Commit Failed", "#EF4444")
 
-    def ui
+    def ui_extract_file(self, vault_id):
+        password = ctk.CTkInputDialog(text="Enter Extraction Key:", title="Auth Required").get_input()
+        if password:
+            try:
+                self.update_status("Pulling Asset...", "#00FFFF")
+                extract_file(vault_id, password)
+                messagebox.showinfo("Restored", "Asset successfully decrypted.")
+                self.update_status("Extraction Complete", "#00FFFF")
+            except Exception as e:
+                messagebox.showerror("Denied", "Invalid cryptographic key.")
+                self.update_status("Auth Failed", "#EF4444")
+
+    def ui_delete_file(self, vault_id):
+        password = ctk.CTkInputDialog(text="ENTER MASTER KEY TO AUTHORIZE DELETE:", title="Security Authorization").get_input()
+        if password:
+            confirm = messagebox.askyesno("Final Warning", f"Permanently wipe {vault_id}?")
+            if confirm:
+                try:
+                    # FIXED: Pass password to backend to rewrite encrypted manifest
+                    delete_vault_file(vault_id, password)
+                    self.refresh_vault() 
+                    self.update_status("Asset Wiped", "#EF4444")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Deletion failed: {e}")
+
+if __name__ == "__main__":
+    app = ComradeApp()
+    app.mainloop()
