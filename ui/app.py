@@ -69,7 +69,7 @@ class ComradeApp(ctk.CTk):
         ctk.CTkLabel(self.meta_info, text="Cyber Operations Module for Resilient Authentication and Data Encryption", 
                      font=("Inter", 12), text_color="#F4F4F5").pack(anchor="w")
         ctk.CTkLabel(self.meta_info, text="COMRADE V1.0 | DESIGNED BY MOHAMMED REHAN { github_id : zfln-rehan0520 }", 
-                     font=("Consolas", 11, "bold"), text_color="#00FFFF").pack(anchor="w")
+                     font=("Consolas", 11, "bold"), text_color="#B9D9EB").pack(anchor="w")
 
         # --- REPO TOOLBAR ---
         self.toolbar = ctk.CTkFrame(self, fg_color="#18181B", height=80, corner_radius=8, border_width=1, border_color="#27272A")
