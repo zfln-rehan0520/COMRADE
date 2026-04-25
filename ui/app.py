@@ -43,7 +43,7 @@ class ComradeApp(ctk.CTk):
         super().__init__()
 
         # Window Setup
-        self.title("COMRADE | Secure Repository")
+        self.title("COMRADE |  A Brother That Guards Your Data")
         self.geometry("1100x750")
         self.configure(fg_color="#09090B")
 
@@ -60,23 +60,23 @@ class ComradeApp(ctk.CTk):
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.pack(fill="x", padx=40, pady=(40, 20))
 
-        self.title_brand = ctk.CTkLabel(self.header, text="COMRADE", font=ctk.CTkFont(size=38, weight="bold"), text_color="#10B981")
+        self.title_brand = ctk.CTkLabel(self.header, text="COMRADE", font=ctk.CTkFont(size=38, weight="bold"), text_color="#00FFFF")
         self.title_brand.pack(side="left")
         
         self.meta_info = ctk.CTkFrame(self.header, fg_color="transparent")
         self.meta_info.pack(side="left", padx=30)
         
         ctk.CTkLabel(self.meta_info, text="Cyber Operations Module for Resilient Authentication and Data Encryption", 
-                     font=("Inter", 12), text_color="#71717A").pack(anchor="w")
-        ctk.CTkLabel(self.meta_info, text="DESIGNED BY MOHAMMED REHAN | CORE v1.0", 
-                     font=("Consolas", 11, "bold"), text_color="#10B981").pack(anchor="w")
+                     font=("Inter", 12), text_color="#F4F4F5").pack(anchor="w")
+        ctk.CTkLabel(self.meta_info, text="COMRADE V1.0 | DESIGNED BY MOHAMMED REHAN { github_id : zfln-rehan0520 }", 
+                     font=("Consolas", 11, "bold"), text_color="#00FFFF").pack(anchor="w")
 
         # --- REPO TOOLBAR ---
         self.toolbar = ctk.CTkFrame(self, fg_color="#18181B", height=80, corner_radius=8, border_width=1, border_color="#27272A")
         self.toolbar.pack(fill="x", padx=40, pady=10)
         
         self.btn_lock = ctk.CTkButton(self.toolbar, text="+ Secure New Asset", font=("Inter", 13, "bold"),
-                                      fg_color="#059669", hover_color="#047857", text_color="#FFFFFF",
+                                      fg_color="#00FFFF", hover_color="#00adad", text_color="#FFFFFF",
                                       height=48, width=200, command=self.ui_secure_file)
         self.btn_lock.pack(side="left", padx=20, pady=15)
 
