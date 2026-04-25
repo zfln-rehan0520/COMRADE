@@ -13,7 +13,7 @@ class FileCard(ctk.CTkFrame):
         super().__init__(master, fg_color="#18181B", corner_radius=8, height=75, 
                          border_width=1, border_color="#00FFFF")
         self.pack(fill="x", padx=15, pady=8)
-        self.pack_propagate(False) # Maintains fixed height
+        self.pack_propagate(False)
 
         # ID Section (Dimmed/Cyber Look)
         self.id_label = ctk.CTkLabel(self, text=vault_id[:12]+"...", 
@@ -27,14 +27,14 @@ class FileCard(ctk.CTkFrame):
         
         # --- BUTTON GROUP ---
         self.btn_extract = ctk.CTkButton(
-            self, text="Extract", width=85, height=32, font=("Inter", 12, "bold"),
+            self, text="EXTRACT", width=90, height=35, font=("Inter", 12, "bold"),
             fg_color="#00FFFF", hover_color="#00CCCC", text_color="#000000",
             command=lambda: extract_cb(vault_id)
         )
         self.btn_extract.pack(side="right", padx=(5, 20))
 
         self.btn_delete = ctk.CTkButton(
-            self, text="Delete", width=85, height=32, font=("Inter", 12, "bold"),
+            self, text="DELETE", width=90, height=35, font=("Inter", 12, "bold"),
             fg_color="#EF4444", hover_color="#B91C1C", text_color="#FFFFFF",
             command=lambda: delete_cb(vault_id)
         )
@@ -57,45 +57,46 @@ class ComradeApp(ctk.CTk):
         except: 
             self.icon_img = None
 
-       # 3. HEADER & TOOLBAR
+       # 3. HEADER & BRANDING
         self.header = ctk.CTkFrame(self, fg_color="transparent")
         self.header.pack(fill="x", padx=40, pady=(40, 20))
 
-        # Main Title
-        self.title_brand = ctk.CTkLabel(
-            self.header, 
-            text="COMRADE", 
-            font=("Inter", 42, "bold"), 
-            text_color="#00FFFF"
-        )
+        self.title_brand = ctk.CTkLabel(self.header, text="COMRADE", 
+                                         font=("Inter", 42, "bold"), text_color="#00FFFF")
         self.title_brand.pack(side="left", anchor="n")
 
-        # Branding Metadata Block
         self.branding_box = ctk.CTkFrame(self.header, fg_color="transparent")
         self.branding_box.pack(side="left", padx=30)
 
-        self.full_name = ctk.CTkLabel(
-            self.branding_box, 
-            text="Cyber Operations Module for Resilient Authentication, Defense and Encryption",
-            font=("Inter", 13), 
-            text_color="#F4F4F5"
-        )
-        self.full_name.pack(anchor="w")
+        ctk.CTkLabel(self.branding_box, 
+                     text="Cyber Operations Module for Resilient Authentication, Defense and Encryption",
+                     font=("Inter", 13), text_color="#F4F4F5").pack(anchor="w")
 
-        self.version_tag = ctk.CTkLabel(
-            self.branding_box, 
-            text=" comrade-V1.0 | DESIGNED BY MOHAMMED REHAN { Github_id :- zfln-rehan0520 }",
-            font=("Consolas", 11, "bold"), 
-            text_color="#00FFFF"
-        )
-        self.version_tag.pack(anchor="w")
+        ctk.CTkLabel(self.branding_box, 
+                     text="comrade-V1.0 | DESIGNED BY MOHAMMED REHAN { Github_id :- zfln-rehan0520 }",
+                     font=("Consolas", 11, "bold"), text_color="#00FFFF").pack(anchor="w")
 
         # --- TOOLBAR ---
         self.toolbar = ctk.CTkFrame(self, fg_color="#18181B", height=80, corner_radius=8,
                                     border_width=1, border_color="#27272A")
         self.toolbar.pack(fill="x", padx=40, pady=10)
-        
-        # ... (keep your existing buttons here) ...
+        self.toolbar.pack_propagate(False) # CRITICAL: Keeps toolbar from collapsing
+
+        self.btn_lock = ctk.CTkButton(
+            self.toolbar, text="+ SECURE NEW ASSET", 
+            fg_color="#00FFFF", hover_color="#00CCCC", text_color="#000000",
+            font=("Inter", 13, "bold"), height=45, width=200,
+            command=self.ui_secure_file
+        )
+        self.btn_lock.pack(side="left", padx=20, pady=15)
+
+        self.btn_sync = ctk.CTkButton(
+            self.toolbar, text="RESCAN ENGINE", 
+            fg_color="#27272A", hover_color="#3F3F46", text_color="#F4F4F5",
+            font=("Inter", 12, "bold"), height=45, width=150,
+            command=self.refresh_vault
+        )
+        self.btn_sync.pack(side="right", padx=20, pady=15)
 
         # 4. ENCRYPTED REPOSITORY CONTAINER
         self.container = ctk.CTkScrollableFrame(
@@ -173,7 +174,6 @@ class ComradeApp(ctk.CTk):
             if messagebox.askyesno("Final Warning", f"Permanently wipe {vault_id}?\nThis cannot be undone."):
                 try:
                     self.update_status("Wiping Asset...", "#EF4444")
-                    # Verified: Backend requires 'pw' to authorize the delete
                     delete_vault_file(vault_id, pw)
                     self.refresh_vault()
                     messagebox.showinfo("Wiped", "Asset permanently erased.")
