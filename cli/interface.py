@@ -13,23 +13,21 @@ def display_banner():
     """Renders the official COMRADE Cyber-Operations Branding."""
     cyan = Fore.CYAN
     white = Fore.WHITE
-    dim = Style.DIM
-    reset = Style.RESET_ALL
-
+    
     print(f"\n{cyan}{'='*85}")
-    print(f"{cyan}  ██████╗ ██████╗ ███╗   ███╗██████╗  █████╗ ██████╗ ███████╗")
-    print(f"{cyan} ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝")
-    print(f"{cyan} ██║     ██║   ██║██╔████╔██║██████╔╝███████║██║  ██║█████╗  ")
-    print(f"{cyan} ██║     ██║   ██║██║╚██╔╝██║██╔══██╗██╔══██║██║  ██║██╔══╝  ")
-    print(f"{cyan} ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║  ██║██║  ██║██████╔╝███████╗")
-    print(f"{cyan}  ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝")
+    print(f"{cyan}   ██████╗ ██████╗ ███╗   ███╗██████╗  █████╗ ██████╗ ███████╗")
+    print(f"{cyan}  ██╔════╝██╔═══██╗████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝")
+    print(f"{cyan}  ██║     ██║   ██║██╔████╔██║██████╔╝███████║██║  ██║█████╗  ")
+    print(f"{cyan}  ██║     ██║   ██║██║╚██╔╝██║██╔══██╗██╔══██║██║  ██║██╔══╝  ")
+    print(f"{cyan}  ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║  ██║██║  ██║██████╔╝███████╗")
+    print(f"{cyan}   ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ ╚══════╝")
     print(f"{cyan}{'='*85}")
     
-    # Metadata Branding (Matches your GUI exactly)
-    print(f"{white}  Cyber Operations Module for Resilient Authentication, Defense and Encryption")
-   print(f"   {cyan}comrade-V1.0 {white}| DESIGNED BY {cyan}MOHAMMED REHAN {white}{{ Github_id :- {cyan}zfln-rehan0520 {white} }}")
+    # Metadata Branding - Perfect Indentation
+    print(f"{white}   Cyber Operations Module for Resilient Authentication, Defense and Encryption")
+    print(f"   {cyan}comrade-V1.0 {white}| DESIGNED BY {cyan}MOHAMMED REHAN {white}{{ Github_id :- {cyan}zfln-rehan0520 {white}}}")
     print(f"{cyan}{'='*85}\n")
-
+    
 def show_vault(files=None):
     """Refined Classic Table - Now fetches data automatically if missing"""
     
