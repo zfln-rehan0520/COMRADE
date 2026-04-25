@@ -101,7 +101,7 @@ class ComradeApp(ctk.CTk):
         # 4. ENCRYPTED REPOSITORY CONTAINER
         self.container = ctk.CTkScrollableFrame(
             self, fg_color="#09090B", label_text="ENCRYPTED REPOSITORY", 
-            label_font=("Inter", 14, "bold"), label_text_color="#00FFFF",
+            label_font=("Inter", 14, "bold"), label_text_color="#F0F8FF",
             border_width=1, border_color="#18181B"
         )
         self.container.pack(fill="both", expand=True, padx=40, pady=(10, 20))
