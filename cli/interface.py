@@ -39,6 +39,13 @@ def show_vault(files=None):
     print(f"{Fore.WHITE}└" + "─" * 25 + "┴" + "─" * 45 + "┘")
     print(f"\n{Fore.GREEN}● {Fore.WHITE}STATUS: {Fore.GREEN}ENCRYPTION ENGINE NOMINAL\n")
 
-def get_password(prompt_text="Enter Master Password: "):
-    """Classic password prompt"""
-    return input(f"\n{Fore.YELLOW}{prompt_text}{Fore.CYAN}")
+from colorama import Fore, Style
+
+def get_password(prompt_text="ENTER MASTER KEY: "):
+    # We wrap the prompt in Fore.CYAN to match your brand
+    # Then we use Style.RESET_ALL so the user's typing stays white/default
+    styled_prompt = f"{Fore.CYAN}{prompt_text}{Style.RESET_ALL}"
+    
+    # If you are using 'maskpass' or 'getpass' for hidden typing:
+    import maskpass
+    return maskpass.askpass(prompt=styled_prompt, mask="*")
