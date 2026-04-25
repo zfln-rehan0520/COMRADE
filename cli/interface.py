@@ -8,9 +8,9 @@ init(autoreset=True)
 def display_banner():
     """Classic Blue Box Banner"""
     os.system('cls' if os.name == 'nt' else 'clear')
-    print(f"{Fore.CYAN}{Style.BRIGHT}╔" + "═" * 45 + "╗")
+    print(f"{Fore.CYAN}{Style.BRIGHT}╔" + "═" * 50 + "╗")
     print(f"{Fore.CYAN}{Style.BRIGHT}║ {Fore.WHITE}🛡️ COMRADE: A Brother That Guards Your Data 🛡️       {Fore.CYAN}║")
-    print(f"{Fore.CYAN}{Style.BRIGHT}╚" + "═" * 45 + "╝")
+    print(f"{Fore.CYAN}{Style.BRIGHT}╚" + "═" * 50 + "╝")
     print(f"\n{Style.DIM}{Fore.WHITE}                Secured Files")
 
 def show_vault(files=None):
