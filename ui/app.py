@@ -88,7 +88,7 @@ class ComradeApp(ctk.CTk):
 
         # --- ASSET LIST ---
         self.container = ctk.CTkScrollableFrame(self, fg_color="#09090B", label_text="ENCRYPTED REPOSITORY", 
-                                                label_font=("Inter", 14, "bold"), label_text_color="#71717A",
+                                                label_font=("Inter", 14, "bold"), label_text_color="#F4F4F5",
                                                 border_width=1, border_color="#18181B")
         self.container.pack(fill="both", expand=True, padx=40, pady=20)
 
@@ -146,7 +146,7 @@ class ComradeApp(ctk.CTk):
                 self.update_status("Pulling Asset...", "#10B981")
                 extract_file(vault_id, password)
                 messagebox.showinfo("Restored", "Asset successfully decrypted.")
-                self.update_status("Extraction Complete", "#34D399")
+                self.update_status("Extraction Complete", "#0fbdbd")
             except Exception as e:
                 messagebox.showerror("Denied", "Invalid cryptographic key.")
                 self.update_status("Auth Failed", "#EF4444")
