@@ -24,7 +24,7 @@ class FileCard(ctk.CTkFrame):
         # --- BUTTON GROUP ---
         # Extract Button (Emerald)
         self.btn_extract = ctk.CTkButton(
-            self, text="Extract", width=70, height=32, font=("Inter", 11, "bold"),
+            self, text="Extract", width=70, height=30, font=("Inter", 11, "bold"),
             fg_color="#00FFFF", hover_color="#059669", text_color="#09090B",
             command=lambda: extract_callback(vault_id)
         )
@@ -32,7 +32,7 @@ class FileCard(ctk.CTkFrame):
 
         # Delete Button (Danger Red)
         self.btn_delete = ctk.CTkButton(
-            self, text="Delete", width=70, height=32, font=("Inter", 11, "bold"),
+            self, text="Delete", width=70, height=30, font=("Inter", 11, "bold"),
             fg_color="#EF4444", hover_color="#B91C1C", text_color="#FFFFFF",
             command=lambda: delete_callback(vault_id)
         )
