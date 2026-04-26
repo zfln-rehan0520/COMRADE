@@ -1,1 +1,19 @@
+# Python Environment
+venv/
+.env
+__pycache__/
+*.py[cod]
+*$py.class
 
+# COMRADE Specific (Security)
+vault/
+*.vault
+.vault_manifest
+
+# IDE Settings
+.vscode/
+.idea/
+
+# OS junk
+Thumbs.db
+Desktop.ini
