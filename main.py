@@ -22,6 +22,13 @@ def apply_operational_lock():
         except:
             pass
 
+def release_lock():
+    """Completely releases the file handle so the OS allows modifications."""
+    global VAULT_HANDLE
+    if VAULT_HANDLE:
+        VAULT_HANDLE.close()
+        VAULT_HANDLE = None
+
 def main():
     # 1. Engage the lock immediately
     apply_operational_lock()
@@ -38,7 +45,6 @@ def main():
         password = get_password("CREATE MASTER KEY: ")
         try:
             name = save_file(args.secure, password)
-            # Re-engage lock if folder was just created
             apply_operational_lock() 
             print(f"✅ Secured as: {name}")
         except Exception as e:
@@ -67,13 +73,12 @@ def main():
         password = get_password("ENTER MASTER KEY TO WIPE: ")
         if password:
             try:
-                # We must briefly close the handle to allow the app itself to delete
-                global VAULT_HANDLE
-                if VAULT_HANDLE: VAULT_HANDLE.close()
+                # RELEASE LOCK BEFORE WIPE
+                release_lock()
                 
                 delete_vault_file(args.remove, password)
                 
-                # Re-lock after deletion
+                # RE-ENGAGE LOCK
                 apply_operational_lock()
                 print(f"🗑️  Asset {args.remove} erased.")
             except Exception as e:
@@ -81,7 +86,6 @@ def main():
                 print(f"❌ Denied: {e}")
 
     else:
-        # Launch GUI
         try:
             from ui.app import ComradeApp
             app = ComradeApp()
