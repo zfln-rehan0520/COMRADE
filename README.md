@@ -1,5 +1,5 @@
 <div align="center">
-<h1>🛡️ COMRADE: Zero-Trust Local Vault</h1>
+<h1>🛡️ COMRADE: A Brother That Gaurds Your Data 🛡️ </h1>
 
 <h4>Cyber Operations Module for Resilient Authentication and Data Encryption</h4>
 
@@ -14,17 +14,15 @@
 
 ----------------------------------------------------------------------------------------------------------------------------
 
-✨ Features
-AES-256-GCM Encryption: Implements Galois/Counter Mode for authenticated encryption, providing both data confidentiality and authenticity (tamper-proofing).
+## 🛠️ Core Features
 
-Cryptographic File Masking: Encrypted assets are renamed to random hexadecimal strings, obfuscating metadata, original file types, and intent.
+* **Zero-Knowledge Architecture**: Encryption and decryption occur locally. Your Master Key is never stored.
+* **Kernel Stealth (Ghost Mode)**: Utilizes `SetFileAttributesW` to flag the vault as a **System Protected** component, making it invisible even if "Show Hidden Files" is enabled.
+* **Anti-Forensic Wiping**: Assets are overwritten with random bits (`os.urandom`) before deletion to prevent data recovery.
+* **Operational Integrity**: Employs a file-handle lock to prevent accidental deletion of the vault while the application is active.
+* **Hybrid Interface**: Full support for both a high-contrast CLI and a modern GUI (CustomTkinter).
 
-PBKDF2 Key Derivation: Hardens security against brute-force attempts using high-iteration salt stretching for Master Passwords.
-
-Hybrid Interface: Switch seamlessly between a high-speed CLI for automated workflows and a Modern GUI (CustomTkinter) for daily use.
-
-Privacy First: Zero-telemetry, zero-cloud. No data ever leaves your local machine.
-
+---
 🛠️ Project Structure
 
 ```powershell
@@ -38,7 +36,8 @@ COMRADE/
 ```
 🚀 Installation
 1. Prerequisites
-Python: 3.10 or higher
+**OS**: Windows 10/11 (Required for Stealth/Locking features).
+* **Python**: 3.10 or higher.
 
 Git: To clone the repository
 
@@ -68,9 +67,9 @@ Action,Command
 ```powershell
 
 List vault contents :- python main.py --list
-Encrypt a file :- python main.py --secure "path/to/file.txt"
-Decrypt/Restore :- python main.py --extract <VAULT_ID>.vault
-Delete File :-  python main.py --remove  <VAULT_ID>.vault
+Secure a File :- python main.py --secure "path/to/file.txt"
+Extract Asset :- python main.py --extract <VAULT_ID>.vault
+Secure Wipe :-  python main.py --remove  <VAULT_ID>.vault
 
 ```
 [!NOTE]
@@ -82,38 +81,89 @@ For a visual dashboard experience, launch the application without flags:
 ```powershell
 python main.py
 ```
+---
+🛠️ 1. Enable System Protection (To Hide the Vault)
+Windows has a "Master Switch" that hides critical OS files. You want this checked so your vault disappears from standard view.
+
+Open File Explorer and click the three dots (...) or View > Options.
+
+Navigate to the View tab.
+
+Scroll down to "Hide protected operating system files (Recommended)".
+
+CHECK this box. 5.  Click Apply.
+
+Effect: The vault/ folder will now be physically invisible even if "Show Hidden Files" is turned on.
+
+🛠️ 2. Disable the Master Switch (To See/Debug the Vault)
+If you need to physically see the encrypted blobs or the manifest for debugging, you must temporarily reverse the setting.
+
+In the same View tab, UNCHECK "Hide protected operating system files (Recommended)".
+
+Windows will show a warning: "You have chosen to display protected operating system files..." Click Yes.
+
+CHECK "Show hidden files, folders, and drives".
+
+Effect: The vault/ folder and its contents will appear as faded/semi-transparent icons, indicating they are in "Ghost Mode."
+---
+```powershell
+Path                           Visibility        Status         Purpose
+----                           ----------        ------         -------
+COMRADE/main.py                 Visible          Active        Main Bootloader
+COMRADE/core/                   Visible          Active       Encryption & File Logic
+COMRADE/cli/                    Visible          Active       Banner & Terminal Interface
+COMRADE/vault/                  Ghosted         Secured       Secured Root Directory
+COMRADE/vault/.vault_manifest   Ghosted         Secured       Encrypted Metadata Mapping
+COMRADE/vault/*.vault           Ghosted         Secured       Encrypted Data Blobs
+```
+---
+
 <h2>🔒 Security Architecture</h2>
 
 COMRADE is engineered on a Zero-Knowledge and Local-First philosophy. The architecture ensures that the application never possesses the means to decrypt your data without your active input.
 ```powershell
-1. Key Derivation Function (KDF)
-To prevent dictionary and brute-force attacks, COMRADE does not use your password directly as an encryption key.
+Security Architecture
 
-Algorithm: PBKDF2 (Password-Based Key Derivation Function 2).
-
-Entropy: Your Master Password is combined with a cryptographic salt unique to your vault.
-
-Output: Generates a high-entropy 256-bit Key used for the AES cipher.
+1. Key Derivation
+COMRADE does not use the master password directly as an encryption key.
+Using PBKDF2 with a unique cryptographic salt, the password is transformed into a high-entropy 256-bit encryption key, strengthening resistance against brute-force and dictionary attacks.
 
 2. Authenticated Encryption
+COMRADE uses AES-256-GCM, providing both confidentiality and integrity.
 
-We utilize AES-256-GCM (Galois/Counter Mode), which is the gold standard for high-performance authenticated encryption.
+Confidentiality: Data is protected using AES-256 encryption.
+Integrity Protection: Authentication tags detect any tampering or modification.
+Nonce-Based Security: A unique nonce is generated for every encryption session, ensuring identical files produce different ciphertexts.
 
-Confidentiality: Standard AES-256 encryption.
+3. Vault Encapsulation
+Encrypted data is stored as isolated .vault containers inside the local vault.
 
-Integrity: The GCM tag ensures that if even a single bit of the encrypted file is altered (bit-flipping attacks), the system will detect the tampering and refuse to decrypt.
-
-Replay Protection: A unique Nonce (Number used Once) is generated for every encryption session, ensuring that the same file encrypted twice will result in two completely different ciphertexts.
-
-3. Vault Encapsulation & Masking
-Obfuscation: Original filenames and extensions are stripped and replaced with a Randomized UUID.
-
-Storage: All assets are encapsulated into .vault files within the local /vault directory.
-
-Metadata Privacy: Without the Master Password, an observer cannot determine what type of file (PDF, Source Code, Image) is being stored.
+Original filenames are replaced with randomized identifiers.
+Data remains encapsulated within encrypted vault files.
+Without the master password, file contents and metadata remain concealed.
 
 ```
-<h2> [!CAUTION] </h2>
+🛠️ The PowerShell "Wipe" Commands
+```powershell
+# 1. Force delete the vault and all contents
+Remove-Item -Path vault -Recurse -Force
+
+# 2. Force delete all project folders and the virtual environment
+Remove-Item -Path core, cli, ui, assets, venv -Recurse -Force
+
+# 3. Delete the individual files
+# (Note: In PowerShell, use commas to separate multiple files)
+Remove-Item -Path main.py, requirements.txt, README.md, .gitignore -Force
+```
+<h4>🧹 Final Step
+Once those commands finish, your COMRADE folder will be empty. You can move up and delete the root folder:</h4>
+
+```powershell
+cd ..
+Remove-Item -Path COMRADE -Recurse -Force
+```
+
+<h2> [ ! CAUTION ! ] </h2>
 
 <h2> ⚠️ Important Security Notice: Zero-Recovery Policy </h2>
 Zero-Trust means Zero-Recovery. <h4> * COMRADE does not store your password, hashes, or "backdoors" in any local database or cloud server</h4>
