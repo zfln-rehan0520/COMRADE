@@ -2,6 +2,12 @@ import os
 import json
 import ctypes
 import platform
+
+def hide_vault_folder(path):
+    """Sets folder to System (0x04) + Hidden (0x02)"""
+    if platform.system() == "Windows":
+        # This tells Windows: "Treat this file as a hidden system component"
+        ctypes.windll.kernel32.SetFileAttributesW(path, 0x02 | 0x04)
 import secrets
 from core.encryption import encrypt_data, decrypt_data
 from core.auth import generate_salt
