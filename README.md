@@ -27,12 +27,19 @@
 
 ```powershell
 COMRADE/
-├── core/          # The Cryptographic Engine (AES logic & File I/O)
-├── cli/           # Terminal interface, banners, and command handling
-├── ui/            # CustomTkinter dashboard for the visual interface
-├── vault/         # Secure storage directory for encrypted .vault files
-├── main.py        # Application entry point
-└── requirements.txt
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── main.py (The Cross-Platform Lock & Entry)
+├── core/
+│   ├── encryption.py
+│   ├── file_manager.py (The Stealth Engine)
+│   ├── auth.py
+│   └── config.py
+├── cli/
+│   └── interface.py
+└── ui/
+    └── app.py
 ```
 🚀 Installation
 1. Prerequisites
