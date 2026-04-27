@@ -1,27 +1,46 @@
 import os
 import json
-import ctypes
 import platform
 import secrets
-from core.encryption import encrypt_data, decrypt_data
-from core.auth import generate_salt
-from core.config import VAULT_DIR, VAULT_EXTENSION
 
-# Static Manifest Path
-MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
+# Import Windows-only libraries only if we are on Windows
+if platform.system() == "Windows":
+    import ctypes
+else:
+    import stat # For Linux/Mac permissions
 
 def hide_vault_folder(path):
-    """STEALTH: Sets folder/file to System (0x04) + Hidden (0x02) using Unicode."""
-    if platform.system() == "Windows" and os.path.exists(path):
+    """
+    STEALTH MODULE:
+    Windows: Uses System+Hidden attributes.
+    Linux/Mac: Relies on the '.' prefix (set in config.py).
+    """
+    if not os.path.exists(path):
+        return
+
+    if platform.system() == "Windows":
         abs_path = os.path.abspath(path)
+        # 0x02: Hidden, 0x04: System
         ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
+    else:
+        # On Unix, we don't need a kernel call to hide (the dot does it),
+        # but we can restrict permissions so only the owner can read/write.
+        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
 
 def unlock_for_writing(path):
-    """Sets attributes to Normal (0x80) to allow modification/deletion."""
-    if platform.system() == "Windows" and os.path.exists(path):
-        abs_path = os.path.abspath(path)
-        ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80)
+    """
+    Sets attributes to allow modification.
+    """
+    if not os.path.exists(path):
+        return
 
+    if platform.system() == "Windows":
+        abs_path = os.path.abspath(path)
+        ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80) # Normal
+    else:
+        # Ensure owner has write permissions on Unix
+        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        
 def load_manifest():
     if not os.path.exists(MANIFEST_PATH):
         return {}
