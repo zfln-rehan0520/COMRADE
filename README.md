@@ -51,12 +51,18 @@ COMRADE/
 COMRADE is engineered to adapt its security layer based on the host Operating System.
 
 ### 1. Environment Setup
-| Task | Windows (PowerShell) | Linux / macOS (Terminal) |
-| :--- | :--- | :--- |
-| **Clone** | `git clone https://github.com/zfln-rehan0520/COMRADE.git` | `git clone [URL]` |
-| **Venv** | `python -m venv venv` | `python3 -m venv venv` |
-| **Activate** | `.\venv\Scripts\Activate.ps1` | `source venv/bin/activate` |
-| **Install** | `pip install -r requirements.txt` | `pip install -r requirements.txt` |
+
+## Windows Powershell {structured}
+| Task | Windows 10/11 (powershell) |
+| :--- | :--- |
+| **Clone** | `git clone https://github.com/zfln-rehan0520/COMRADE.git` |
+| **Chanage Directory** | `cd COMRADE` |
+| **Install Venv** | `py -m venv venv` |
+| **Policy Bypass** | `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process` |
+| **Activate** | `.\venv\Scripts\Activate.ps1` |
+| **Install Req** | `pip install -r requirements.txt` |
+| **Install Colorama** | `pip install colorama` |
+
 
 
 ## Linux cmd line {structured}
@@ -66,13 +72,13 @@ COMRADE is engineered to adapt its security layer based on the host Operating Sy
 | **Clone** | `git clone https://github.com/zfln-rehan0520/COMRADE.git` |
 | **Chanage Directory** | `cd COMRADE` |
 | **Python req** | `sudo apt install python3 python3-pip` |
-| **Venv** | `sudo apt install python3-venv` |
-| **Venv** | `python3 -m venv venv` |
+| **Install Venv** | `sudo apt install python3-venv` |
+| **Set-up Venv** | `python3 -m venv venv` |
 | **Activate** | `source venv/bin/activate` |
 | **Install Req** | `pip install -r requirements.txt` |
 | **Install Colorama** | `pip install colorama` |
 | **Install Tkinter** | `sudo apt install python3-tk` |
-| **Tkinter** | `python3 -m tkinter` |
+| **Set-up Tkinter** | `python3 -m tkinter` |
 
 ```text
 
@@ -97,16 +103,46 @@ Once the environment is active, use the following commands:
 * **GUI Support**: Linux users may require `sudo apt install python3-tk` for GUI rendering.
 
 ---
+🔒 SECURITY ARCHITECTURE - COMRADE
+----------------------------------
+COMRADE implements a "Defense-in-Depth" strategy, ensuring that even if the 
+host machine is compromised, the encrypted assets remain computationally 
+infeasible to decrypt.
 
-## 🔒 Security Architecture
+```text
+1. KEY DERIVATION & MEMORY HARDNESS
 
-### 1. Key Derivation (KDF)
-COMRADE does not use your password directly as a key. It utilizes **PBKDF2 with Scrypt** and a unique cryptographic salt. This transforms your password into a high-entropy 256-bit key.
+   - KDF: Scrypt-based Key Derivation Function.
+   
+   - Parameters: Configured with high N, r, p work factors to maximize 
+     memory hardness, rendering GPU/ASIC brute-force attacks unviable.
+     
+   - Salt: Unique 16-byte high-entropy salt per vault (via os.urandom), 
+     mitigating rainbow table attacks.
+     
+   - Zero-Persistence: Derived keys reside strictly in volatile memory; 
+     never persisted to swap space or disk.
 
-### 2. Authenticated Encryption
-Using **AES-256-GCM**, COMRADE provides:
-* **Confidentiality**: Industry-standard 256-bit encryption.
-* **Integrity**: GCM Authentication Tags detect any bit-level tampering.
-* **Nonce Security**: A unique IV (Initialization Vector) is generated for every file.
+2. AUTHENTICATED ENCRYPTION (AEAD)
+
+   - Protocol: AES-256-GCM (Galois/Counter Mode).
+   
+   - Confidentiality: Industry-standard 256-bit symmetric encryption.
+   
+   - Integrity: GHASH Authentication Tags detect bit-level tampering. 
+     Decryption aborts if the tag is invalid (Anti-Tamper).
+     
+   - Nonce Isolation: Unique 96-bit Initialization Vector (IV) per 
+     encryption cycle to ensure ciphertext divergence.
+
+3. ANTI-FORENSIC & OPERATIONAL LOGIC
+
+   - Secure Wipe: Implements high-entropy random bit overwriting 
+     before file deletion to defeat disk recovery tools.
+     
+   - Atomic Writes: Utilizes write-and-rename patterns to prevent 
+     data corruption during unexpected power loss.
+
+   ```
 
 ---
