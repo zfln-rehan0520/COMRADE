@@ -2,45 +2,56 @@ import os
 import json
 import platform
 import secrets
+import ctypes # We will wrap this in a try/except for Linux/Mac safety
 
-# Import Windows-only libraries only if we are on Windows
-if platform.system() == "Windows":
-    import ctypes
-else:
-    import stat # For Linux/Mac permissions
+# --- ADD THESE IMPORTS ---
+from core.encryption import encrypt_data, decrypt_data
+from core.auth import generate_salt
+from core.config import VAULT_DIR, VAULT_EXTENSION
+
+# Static Manifest Path
+MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
 
 def hide_vault_folder(path):
     """
     STEALTH MODULE:
     Windows: Uses System+Hidden attributes.
-    Linux/Mac: Relies on the '.' prefix (set in config.py).
+    Linux/Mac: Relies on the '.' prefix and restricted permissions.
     """
     if not os.path.exists(path):
         return
 
     if platform.system() == "Windows":
-        abs_path = os.path.abspath(path)
-        # 0x02: Hidden, 0x04: System
-        ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
+        try:
+            abs_path = os.path.abspath(path)
+            # 0x02: Hidden, 0x04: System
+            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
+        except:
+            pass # Fallback if Windows call fails
     else:
-        # On Unix, we don't need a kernel call to hide (the dot does it),
-        # but we can restrict permissions so only the owner can read/write.
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+        # On Unix, we ensure the owner has full access, others have none (700)
+        try:
+            os.chmod(path, 0o700)
+        except:
+            pass
 
 def unlock_for_writing(path):
-    """
-    Sets attributes to allow modification.
-    """
+    """Sets attributes to allow modification."""
     if not os.path.exists(path):
         return
 
     if platform.system() == "Windows":
-        abs_path = os.path.abspath(path)
-        ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80) # Normal
+        try:
+            abs_path = os.path.abspath(path)
+            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80) # Normal
+        except:
+            pass
     else:
-        # Ensure owner has write permissions on Unix
-        os.chmod(path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
-        
+        try:
+            os.chmod(path, 0o700)
+        except:
+            pass
+
 def load_manifest():
     if not os.path.exists(MANIFEST_PATH):
         return {}
