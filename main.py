@@ -10,6 +10,7 @@ from core.config import VAULT_DIR
 
 init(autoreset=True)
 
+# Global lock to prevent deletion by keeping a file handle open
 VAULT_HANDLE = None
 
 def secure_wipe(file_path):
@@ -60,13 +61,11 @@ def main():
         display_banner()
         password = get_password("CREATE MASTER KEY: ")
         try:
-            # FIX: Save original path to wipe it later
             original_path = args.secure
             name = save_file(original_path, password)
             
-            # --- THE FIX ---
+            # --- THE FIX: Wipe original after securing ---
             secure_wipe(original_path)
-            # ----------------
             
             apply_operational_lock() 
             print(f"✅ Secured as: {name} (Original Wiped)")
@@ -85,11 +84,18 @@ def main():
         display_banner()
         password = get_password("ENTER MASTER KEY: ")
         try:
-            # FIX: Get path, then decide if you want to wipe the vault source
+            # 1. Restore the file to the user
             path = extract_file(args.extract, password)
             
-         
+            # --- THE FIX: Wipe vault copy after extraction ---
+            print(f"{Fore.CYAN}🧹 Finalizing extraction: Shredding vault residue...")
+            release_lock()  # Release lock to allow vault modification
+            delete_vault_file(args.extract, password)
+            apply_operational_lock() # Re-engage lock
+            # ------------------------------------------------
+            
             print(f"✅ Restored to: {path}")
+            print(f"{Fore.GREEN}🛡️ Vault entry cleared. No encrypted trace remains.")
         except Exception as e:
             print(f"❌ Denied: Invalid Key.")
 
