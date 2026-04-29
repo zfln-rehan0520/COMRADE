@@ -86,9 +86,7 @@ def save_file(file_path, password):
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
     
-    hide_vault_folder(VAULT_DIR)
-
-    # Get the FULL ABSOLUTE PATH of the original file
+    # Capture the HOME location of the file
     abs_original_path = os.path.abspath(file_path)
 
     with open(file_path, 'rb') as f:
@@ -97,16 +95,18 @@ def save_file(file_path, password):
     salt = generate_salt()
     encrypted_content = encrypt_data(data, password, salt)
     
-    vault_filename = f"{os.urandom(8).hex()}{VAULT_EXTENSION}"
+    # Camouflage the filename: Looks like a system cache entry
+    vault_filename = f"idx_{os.urandom(4).hex()}{VAULT_EXTENSION}"
     vault_path = os.path.join(VAULT_DIR, vault_filename)
 
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    hide_vault_folder(vault_path)
+    # Hide the vault in AppData
+    hide_vault_folder(VAULT_DIR)
 
     manifest = load_manifest()
-    # FIX: Store the full absolute path instead of just the basename
+    # Save the exact original path for the 'Restore' feature
     manifest[vault_filename] = abs_original_path 
     
     unlock_for_writing(MANIFEST_PATH)
@@ -128,18 +128,16 @@ def extract_file(vault_id, password):
 
     decrypted_data = decrypt_data(encrypted_content, password, salt)
     
-    # FIX: The manifest now contains the exact original location
-    output_path = manifest[vault_id] 
+    # THE RESTORE FIX: Get the original home path from manifest
+    target_output_path = manifest[vault_id] 
     
-    # Ensure the directory still exists (in case user deleted the parent folder)
-    output_dir = os.path.dirname(output_path)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    # Auto-create the directory if the user deleted it in the meantime
+    os.makedirs(os.path.dirname(target_output_path), exist_ok=True)
 
-    with open(output_path, 'wb') as f:
+    with open(target_output_path, 'wb') as f:
         f.write(decrypted_data)
     
-    return output_path
+    return target_output_path
 
 def delete_vault_file(vault_id, password):
     if not password:
