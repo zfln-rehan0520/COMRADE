@@ -1,7 +1,8 @@
 import sys
 import argparse
 import os
-import platform  # Added for OS detection
+import platform
+import secrets  # Added for secure wiping
 from colorama import Fore, init
 from cli.interface import display_banner, show_vault, get_password
 from core.file_manager import save_file, extract_file, delete_vault_file, list_secured_files
@@ -9,53 +10,45 @@ from core.config import VAULT_DIR
 
 init(autoreset=True)
 
-# Global lock to prevent deletion by keeping a file handle open
 VAULT_HANDLE = None
 
+def secure_wipe(file_path):
+    """Overwrites file with random data before deleting to prevent recovery."""
+    if os.path.exists(file_path):
+        try:
+            size = os.path.getsize(file_path)
+            with open(file_path, "ba+", buffering=0) as f:
+                f.write(secrets.token_bytes(size))
+            os.remove(file_path)
+        except:
+            os.remove(file_path)  # Fallback to standard delete if wipe fails
+
 def apply_operational_lock():
-    """
-    Prevents deletion while the app is running.
-    Windows: Persistent handle in append mode.
-    Linux/Mac: fcntl advisory lock.
-    """
     global VAULT_HANDLE
     manifest_path = os.path.join(VAULT_DIR, ".vault_manifest")
-    
     if os.path.exists(manifest_path):
         try:
-            # Step 1: Open the handle (Cross-platform)
             VAULT_HANDLE = open(manifest_path, "a")
-            
-            # Step 2: Apply Unix-specific lock
             if platform.system() != "Windows":
                 import fcntl
-                # LOCK_EX: Exclusive lock
-                # LOCK_NB: Non-blocking (don't wait if someone else has it)
                 fcntl.flock(VAULT_HANDLE, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except (ImportError, IOError):
-            # If locking isn't supported or fails, we still allow the app to run
             pass
 
 def release_lock():
-    """Completely releases the file handle so the OS allows modifications."""
     global VAULT_HANDLE
     if VAULT_HANDLE:
-        # Step 1: Explicitly unlock for Unix before closing
         if platform.system() != "Windows":
             try:
                 import fcntl
                 fcntl.flock(VAULT_HANDLE, fcntl.LOCK_UN)
             except:
                 pass
-        
-        # Step 2: Close and clear handle (Windows & Unix)
         VAULT_HANDLE.close()
         VAULT_HANDLE = None
 
 def main():
-    # 1. Engage the lock immediately
     apply_operational_lock()
-
     parser = argparse.ArgumentParser(description="COMRADE: Secure Local Vault")
     parser.add_argument("--secure", type=str, help="Path to file")
     parser.add_argument("--list", action="store_true", help="List vault")
@@ -67,10 +60,16 @@ def main():
         display_banner()
         password = get_password("CREATE MASTER KEY: ")
         try:
-            name = save_file(args.secure, password)
-            # Re-lock in case directory/manifest was just created
+            # FIX: Save original path to wipe it later
+            original_path = args.secure
+            name = save_file(original_path, password)
+            
+            # --- THE FIX ---
+            secure_wipe(original_path)
+            # ----------------
+            
             apply_operational_lock() 
-            print(f"✅ Secured as: {name}")
+            print(f"✅ Secured as: {name} (Original Wiped)")
         except Exception as e:
             print(f"❌ Error: {e}")
 
@@ -86,7 +85,10 @@ def main():
         display_banner()
         password = get_password("ENTER MASTER KEY: ")
         try:
+            # FIX: Get path, then decide if you want to wipe the vault source
             path = extract_file(args.extract, password)
+            
+         
             print(f"✅ Restored to: {path}")
         except Exception as e:
             print(f"❌ Denied: Invalid Key.")
@@ -97,12 +99,8 @@ def main():
         password = get_password("ENTER MASTER KEY TO WIPE: ")
         if password:
             try:
-                # RELEASE LOCK BEFORE WIPE (Crucial for all OS)
                 release_lock()
-                
                 delete_vault_file(args.remove, password)
-                
-                # RE-ENGAGE LOCK after deletion is complete
                 apply_operational_lock()
                 print(f"🗑️  Asset {args.remove} erased.")
             except Exception as e:
@@ -110,7 +108,6 @@ def main():
                 print(f"❌ Denied: {e}")
 
     else:
-        # Launch GUI
         try:
             from ui.app import ComradeApp
             app = ComradeApp()
