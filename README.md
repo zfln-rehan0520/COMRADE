@@ -6,9 +6,9 @@
   
   ![Version](https://img.shields.io/badge/version-1.10-ff8c00?style=for-the-badge)
   ![License](https://img.shields.io/badge/license-MIT-white?style=for-the-badge)
-   ![Python](https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge&logo=python)
+  ![Python](https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge&logo=python)
   ![Security](https://img.shields.io/badge/encryption-AES--256--GCM-00ffff?style=for-the-badge)
-  ![Platform](https://img.shields.io/badge/platform-Cross--Platform-blue?style=for-the-badge)
+  ![Build](https://img.shields.io/badge/tests-4%20passed-brightgreen?style=for-the-badge)
 
   <p align="center">
     COMRADE is a high-security, local-first encryption engine engineered for developers and privacy advocates. 
@@ -28,24 +28,25 @@
 
 ---
 
-
-## 🛠️ Project Structure
+## 📁 Project Structure
 ```text
 COMRADE/
-├── .gitignore               # Multi-platform exclusion rules
-├── README.md                # Documentation
-├── requirements.txt         # Global dependencies
-├── main.py                  # Entry point & Cross-platform lock logic
-├── core/                    # Logic Layer
-│   ├── encryption.py        # AES-256-GCM engine
-│   ├── file_manager.py      # Stealth & Wipe logic
-│   └── auth.py              # Scrypt KDF logic
-├── cli/                     # Interface Layer
-└── ui/                      # Dashboard Layer
-├── .env.example            # Template for local configuration
+├── core/                # Logic Layer (AES-256-GCM, Scrypt KDF)
+├── cli/                 # Interface Layer (Command Line)
+├── ui/                  # Dashboard Layer (Tkinter/GUI)
+├── test/                # Verification Suite (Auth & Crypto tests)
+├── main.py              # Entry point & Cross-platform lock logic
+├── requirements.txt     # Global dependencies
+└── .gitignore           # Multi-platform exclusion rules
 ```
 -----
-
+🧪 Testing & Verification
+COMRADE includes a specialized testing suite to ensure cryptographic integrity across different Operating Systems.
+```text
+# Run the automated test suite
+pytest
+```
+-----
 ## 🌍 Multi-Platform Deployment & Usage
 
 COMRADE is engineered to adapt its security layer based on the host Operating System.
@@ -90,10 +91,10 @@ git clone https://github.com/zfln-rehan0520/COMRADE.git && cd COMRADE && sudo ap
 Once the environment is active, use the following commands:
 
 * **List Vault Content**: `python main.py --list`
+* **Launch GUI**: `python main.py`
 * **Secure a File**: `python main.py --secure "path/to/file.txt"`
 * **Extract Asset**: `python main.py --extract <VAULT_ID>.vault`
 * **Secure Wipe**: `python main.py --remove <VAULT_ID>.vault`
-* **Launch GUI**: `python main.py`
 
 ### 3. OS-Specific Security Logic
 
@@ -109,39 +110,33 @@ host machine is compromised, the encrypted assets remain computationally
 infeasible to decrypt.
 
 ```text
-1. KEY DERIVATION & MEMORY HARDNESS
+1. Key Derivation & Memory Hardness
+KDF: Scrypt-based Key Derivation.
 
-   - KDF: Scrypt-based Key Derivation Function.
-   
-   - Parameters: Configured with high N, r, p work factors to maximize 
-     memory hardness, rendering GPU/ASIC brute-force attacks unviable.
-     
-   - Salt: Unique 16-byte high-entropy salt per vault (via os.urandom), 
-     mitigating rainbow table attacks.
-     
-   - Zero-Persistence: Derived keys reside strictly in volatile memory; 
-     never persisted to swap space or disk.
+Parameters: High N, r, p factors to maximize memory hardness, mitigating GPU/ASIC brute-force attacks.
 
-2. AUTHENTICATED ENCRYPTION (AEAD)
+Salt: Unique 16-byte high-entropy salt per vault (via os.urandom).
 
-   - Protocol: AES-256-GCM (Galois/Counter Mode).
-   
-   - Confidentiality: Industry-standard 256-bit symmetric encryption.
-   
-   - Integrity: GHASH Authentication Tags detect bit-level tampering. 
-     Decryption aborts if the tag is invalid (Anti-Tamper).
-     
-   - Nonce Isolation: Unique 96-bit Initialization Vector (IV) per 
-     encryption cycle to ensure ciphertext divergence.
+Zero-Persistence: Derived keys reside strictly in volatile memory (RAM) and are cleared on exit.
 
-3. ANTI-FORENSIC & OPERATIONAL LOGIC
+2. Authenticated Encryption (AEAD)
+Protocol: AES-256-GCM (Galois/Counter Mode).
 
-   - Secure Wipe: Implements high-entropy random bit overwriting 
-     before file deletion to defeat disk recovery tools.
-     
-   - Atomic Writes: Utilizes write-and-rename patterns to prevent 
-     data corruption during unexpected power loss.
+Integrity: GHASH Authentication Tags detect bit-level tampering. Decryption aborts if the tag is invalid (Anti-Tamper).
 
-   ```
+Nonce Isolation: Unique 96-bit Initialization Vector (IV) per encryption cycle to ensure ciphertext divergence.
 
+3. OS-Specific Stealth Logic
+Windows: Uses Kernel-level attribute flags (System + Hidden) and persistent file handles for locking.
+
+Linux/macOS: Utilizes dot-prefix (.comrade_vault) for directory stealth and fcntl advisory locking.
+
+
+```
 ---
+### 👤 Author
+[Mohammed Rehan](https://github.com/zfln-rehan0520) Founder of [LYBERNET](https://github.com/lybernet-labs)
+
+<h5>Disclaimer: This tool is intended for professional security operations and educational purposes only. Use responsibly!</h5>
+----
+
