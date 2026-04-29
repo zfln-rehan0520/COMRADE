@@ -1,6 +1,7 @@
 import os
 
-# Using a dot-prefix ensures it's hidden on Linux/Mac
-# On Windows, we will still apply the Kernel 'System' attribute to this folder
-VAULT_DIR = os.path.join(os.getcwd(), ".comrade_vault")
-VAULT_EXTENSION = ".vault"
+# This moves the vault to C:\Users\YourName\AppData\Local\ComradeVault
+VAULT_DIR = os.path.join(os.getenv('LOCALAPPDATA'), 'ComradeVault')
+
+# Rename the extension to look like a generic Windows data file
+VAULT_EXTENSION = ".dat"
