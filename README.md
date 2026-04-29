@@ -61,7 +61,7 @@ COMRADE is engineered to adapt its security layer based on the host Operating Sy
 | **Policy Bypass** | `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process` |
 | **Activate** | `.\venv\Scripts\Activate.ps1` |
 | **Install Req** | `pip install -r requirements.txt` |
-| **Install Colorama** | `pip install colorama` |
+| **Install Other Req** | `pip install colorama , pip install maskpass` |
 
 
 
