@@ -22,7 +22,7 @@ def secure_wipe(path):
             with open(path, "wb", buffering=0) as f:
                 f.write(secrets.token_bytes(size))
             os.remove(path)
-        except Exception as e:
+        except Exception:
             # Fallback to standard delete if shredding is blocked
             os.remove(path)
 
@@ -41,7 +41,7 @@ def hide_vault_folder(path):
         try:
             # Direct Kernel Call
             ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
-            # Recursive Shell Fallback
+            # Recursive Shell Fallback for persistence
             subprocess.run(['attrib', '+s', '+h', abs_path, '/s', '/d'], 
                            check=False, capture_output=True)
         except:
@@ -83,16 +83,11 @@ def load_manifest():
         return {}
 
 def save_file(file_path, password):
-    """
-    COMMIT TO VAULT:
-    Encrypts, moves to AppData/Hidden folder, and wipes the original.
-    """
+    """Encrypts, moves to Hidden folder, and shreds original."""
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR, mode=0o700, exist_ok=True)
     
     hide_vault_folder(VAULT_DIR)
-
-    # Capture original home location for restoration
     abs_original_path = os.path.abspath(file_path)
 
     with open(file_path, 'rb') as f:
@@ -101,7 +96,6 @@ def save_file(file_path, password):
     salt = generate_salt()
     encrypted_content = encrypt_data(data, password, salt)
     
-    # Camouflage the filename as a system cache index
     vault_filename = f"idx_{os.urandom(4).hex()}{VAULT_EXTENSION}"
     vault_path = os.path.join(VAULT_DIR, vault_filename)
 
@@ -110,7 +104,6 @@ def save_file(file_path, password):
 
     hide_vault_folder(vault_path)
 
-    # Update Manifest
     manifest = load_manifest()
     manifest[vault_filename] = abs_original_path 
     
@@ -119,16 +112,11 @@ def save_file(file_path, password):
         json.dump(manifest, f, indent=4)
     hide_vault_folder(MANIFEST_PATH)
     
-    # Final Security Step: Shred the unencrypted original
     secure_wipe(file_path)
-    
     return vault_filename
 
 def extract_file(vault_id, password):
-    """
-    RESTORE HOME:
-    Decrypts and 'teleports' the file back to its original directory.
-    """
+    """Decrypts and restores the file to its original absolute path."""
     manifest = load_manifest()
     if vault_id not in manifest:
         raise Exception("Asset signature not found in manifest.")
@@ -140,17 +128,14 @@ def extract_file(vault_id, password):
 
     decrypted_data = decrypt_data(encrypted_content, password, salt)
     
-    # Get original path from manifest
     target_path = manifest[vault_id]
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
     with open(target_path, 'wb') as f:
         f.write(decrypted_data)
     
-    # Post-Extraction Cleanup: Wipe the vault residue
     secure_wipe(vault_path)
     
-    # Update Manifest
     del manifest[vault_id]
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
@@ -158,6 +143,33 @@ def extract_file(vault_id, password):
     hide_vault_folder(MANIFEST_PATH)
 
     return target_path
+
+def delete_vault_file(vault_id, password):
+    """Authorized deletion: requires password to shred a vault asset."""
+    if not password:
+        raise Exception("Authorization required.")
+
+    manifest = load_manifest()
+    if vault_id not in manifest:
+        raise Exception("Target not found.")
+        
+    vault_path = os.path.join(VAULT_DIR, vault_id)
+    
+    # Verification pass
+    with open(vault_path, 'rb') as f:
+        salt = f.read(16)
+        encrypted_content = f.read()
+    decrypt_data(encrypted_content, password, salt)
+
+    if os.path.exists(vault_path):
+        secure_wipe(vault_path)
+    
+    del manifest[vault_id]
+    unlock_for_writing(MANIFEST_PATH)
+    with open(MANIFEST_PATH, 'w') as f:
+        json.dump(manifest, f, indent=4)
+    hide_vault_folder(MANIFEST_PATH)
+    return True
 
 def list_secured_files():
     manifest = load_manifest()
