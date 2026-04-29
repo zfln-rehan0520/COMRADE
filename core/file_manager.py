@@ -3,6 +3,7 @@ import json
 import platform
 import secrets
 import ctypes
+import subprocess # Added for robust stealth fallback
 
 from core.encryption import encrypt_data, decrypt_data
 from core.auth import generate_salt
@@ -14,7 +15,7 @@ MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
 def secure_wipe(path):
     """Physically overwrites file with random data before deletion."""
     if os.path.exists(path):
-        unlock_for_writing(path) # Must unlock to overwrite bits
+        unlock_for_writing(path) 
         size = os.path.getsize(path)
         with open(path, "wb", buffering=0) as f:
             f.write(secrets.token_bytes(size))
@@ -23,7 +24,8 @@ def secure_wipe(path):
 def hide_vault_folder(path):
     """
     STEALTH MODULE (Ghost Mode):
-    Windows: 0x02 (Hidden) + 0x04 (System) = Invisible to Explorer
+    Windows: 0x02 (Hidden) + 0x04 (System)
+    Applies recursively to ensure all contents are invisible.
     """
     if not os.path.exists(path):
         return
@@ -31,8 +33,18 @@ def hide_vault_folder(path):
     if platform.system() == "Windows":
         try:
             abs_path = os.path.abspath(path)
-            # Set Hidden (2) + System (4)
+            # 1. Apply to the target path
             ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
+            
+            # 2. Recursive application for directories
+            if os.path.isdir(abs_path):
+                for root, dirs, files in os.walk(abs_path):
+                    for item in dirs + files:
+                        item_path = os.path.join(root, item)
+                        ctypes.windll.kernel32.SetFileAttributesW(item_path, 0x02 | 0x04)
+            
+            # 3. Secondary Shell Fallback (Ensures persistence)
+            subprocess.run(['attrib', '+s', '+h', abs_path, '/s', '/d'], check=False, capture_output=True)
         except:
             pass 
     else:
@@ -51,6 +63,8 @@ def unlock_for_writing(path):
             abs_path = os.path.abspath(path)
             # 0x80 is 'FILE_ATTRIBUTE_NORMAL'
             ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80)
+            # Strip S/H via Shell to be sure
+            subprocess.run(['attrib', '-s', '-h', abs_path, '/s', '/d'], check=False, capture_output=True)
         except:
             pass
     else:
@@ -72,9 +86,6 @@ def save_file(file_path, password):
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
     
-    # Hide the directory
-    hide_vault_folder(VAULT_DIR)
-
     with open(file_path, 'rb') as f:
         data = f.read()
 
@@ -88,13 +99,12 @@ def save_file(file_path, password):
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    # Apply Ghost Mode to the new vault file
-    hide_vault_folder(vault_path)
+    # Re-apply stealth to the entire vault structure
+    hide_vault_folder(VAULT_DIR)
 
     manifest = load_manifest()
     manifest[vault_filename] = filename
     
-    # UNLOCK -> WRITE -> RE-HIDE (Essential for Ghost Mode to work)
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
         json.dump(manifest, f, indent=4)
@@ -130,17 +140,14 @@ def delete_vault_file(vault_id, password):
         
     vault_path = os.path.join(VAULT_DIR, vault_id)
     
-    # Verification
     with open(vault_path, 'rb') as f:
         salt = f.read(16)
         encrypted_content = f.read()
     decrypt_data(encrypted_content, password, salt)
 
-    # Perform Secure Wipe
     if os.path.exists(vault_path):
         secure_wipe(vault_path)
     
-    # Manifest Cleanup
     del manifest[vault_id]
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
