@@ -1,21 +1,22 @@
 import os
 import platform
+import logging
 
-# Detect the Operating System
+logger = logging.getLogger(__name__)
+
 IS_WINDOWS = platform.system() == "Windows"
+IS_LINUX   = platform.system() == "Linux"
+IS_MAC     = platform.system() == "Darwin"
 
 if IS_WINDOWS:
-    # Windows: Use the Local AppData folder
-    # Fallback to current directory if LOCALAPPDATA isn't found for some reason
     base_dir = os.getenv('LOCALAPPDATA', os.getcwd())
     VAULT_DIR = os.path.join(base_dir, 'ComradeVault')
 else:
-    # Linux/Mac: Use a hidden folder in the User's Home directory
-    # ~/.comrade_vault is the standard Linux way to hide app data
     base_dir = os.path.expanduser('~')
     VAULT_DIR = os.path.join(base_dir, '.comrade_vault')
 
 VAULT_EXTENSION = ".dat"
+MANIFEST_PATH   = os.path.join(VAULT_DIR, "sys_cache.idx")
 
-# Manifest path logic
-MANIFEST_PATH = os.path.join(VAULT_DIR, "sys_cache.idx")
+# Salt size must match what auth.py generates (32 bytes)
+SALT_SIZE = 32
