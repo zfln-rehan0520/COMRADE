@@ -86,24 +86,28 @@ def save_file(file_path, password):
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
     
+    hide_vault_folder(VAULT_DIR)
+
+    # Get the FULL ABSOLUTE PATH of the original file
+    abs_original_path = os.path.abspath(file_path)
+
     with open(file_path, 'rb') as f:
         data = f.read()
 
     salt = generate_salt()
     encrypted_content = encrypt_data(data, password, salt)
     
-    filename = os.path.basename(file_path)
     vault_filename = f"{os.urandom(8).hex()}{VAULT_EXTENSION}"
     vault_path = os.path.join(VAULT_DIR, vault_filename)
 
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    # Re-apply stealth to the entire vault structure
-    hide_vault_folder(VAULT_DIR)
+    hide_vault_folder(vault_path)
 
     manifest = load_manifest()
-    manifest[vault_filename] = filename
+    # FIX: Store the full absolute path instead of just the basename
+    manifest[vault_filename] = abs_original_path 
     
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
@@ -123,8 +127,15 @@ def extract_file(vault_id, password):
         encrypted_content = f.read()
 
     decrypted_data = decrypt_data(encrypted_content, password, salt)
-    output_path = os.path.join(os.getcwd(), manifest[vault_id])
     
+    # FIX: The manifest now contains the exact original location
+    output_path = manifest[vault_id] 
+    
+    # Ensure the directory still exists (in case user deleted the parent folder)
+    output_dir = os.path.dirname(output_path)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     with open(output_path, 'wb') as f:
         f.write(decrypted_data)
     
