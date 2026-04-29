@@ -2,9 +2,8 @@ import os
 import json
 import platform
 import secrets
-import ctypes # We will wrap this in a try/except for Linux/Mac safety
+import ctypes
 
-# --- ADD THESE IMPORTS ---
 from core.encryption import encrypt_data, decrypt_data
 from core.auth import generate_salt
 from core.config import VAULT_DIR, VAULT_EXTENSION
@@ -12,11 +11,19 @@ from core.config import VAULT_DIR, VAULT_EXTENSION
 # Static Manifest Path
 MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
 
+def secure_wipe(path):
+    """Physically overwrites file with random data before deletion."""
+    if os.path.exists(path):
+        unlock_for_writing(path) # Must unlock to overwrite bits
+        size = os.path.getsize(path)
+        with open(path, "wb", buffering=0) as f:
+            f.write(secrets.token_bytes(size))
+        os.remove(path)
+
 def hide_vault_folder(path):
     """
-    STEALTH MODULE:
-    Windows: Uses System+Hidden attributes.
-    Linux/Mac: Relies on the '.' prefix and restricted permissions.
+    STEALTH MODULE (Ghost Mode):
+    Windows: 0x02 (Hidden) + 0x04 (System) = Invisible to Explorer
     """
     if not os.path.exists(path):
         return
@@ -24,26 +31,26 @@ def hide_vault_folder(path):
     if platform.system() == "Windows":
         try:
             abs_path = os.path.abspath(path)
-            # 0x02: Hidden, 0x04: System
+            # Set Hidden (2) + System (4)
             ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
         except:
-            pass # Fallback if Windows call fails
+            pass 
     else:
-        # On Unix, we ensure the owner has full access, others have none (700)
         try:
             os.chmod(path, 0o700)
         except:
             pass
 
 def unlock_for_writing(path):
-    """Sets attributes to allow modification."""
+    """Normalizes attributes (0x80) to allow modification/deletion."""
     if not os.path.exists(path):
         return
 
     if platform.system() == "Windows":
         try:
             abs_path = os.path.abspath(path)
-            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80) # Normal
+            # 0x80 is 'FILE_ATTRIBUTE_NORMAL'
+            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80)
         except:
             pass
     else:
@@ -65,6 +72,7 @@ def save_file(file_path, password):
     if not os.path.exists(VAULT_DIR):
         os.makedirs(VAULT_DIR)
     
+    # Hide the directory
     hide_vault_folder(VAULT_DIR)
 
     with open(file_path, 'rb') as f:
@@ -80,11 +88,13 @@ def save_file(file_path, password):
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
+    # Apply Ghost Mode to the new vault file
     hide_vault_folder(vault_path)
 
     manifest = load_manifest()
     manifest[vault_filename] = filename
     
+    # UNLOCK -> WRITE -> RE-HIDE (Essential for Ghost Mode to work)
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
         json.dump(manifest, f, indent=4)
@@ -104,8 +114,10 @@ def extract_file(vault_id, password):
 
     decrypted_data = decrypt_data(encrypted_content, password, salt)
     output_path = os.path.join(os.getcwd(), manifest[vault_id])
+    
     with open(output_path, 'wb') as f:
         f.write(decrypted_data)
+    
     return output_path
 
 def delete_vault_file(vault_id, password):
@@ -118,19 +130,15 @@ def delete_vault_file(vault_id, password):
         
     vault_path = os.path.join(VAULT_DIR, vault_id)
     
-    # Auth Validation
+    # Verification
     with open(vault_path, 'rb') as f:
         salt = f.read(16)
         encrypted_content = f.read()
     decrypt_data(encrypted_content, password, salt)
 
-    # UNLOCK and WIPE
+    # Perform Secure Wipe
     if os.path.exists(vault_path):
-        unlock_for_writing(vault_path)
-        file_size = os.path.getsize(vault_path)
-        with open(vault_path, "wb") as f:
-            f.write(os.urandom(file_size)) 
-        os.remove(vault_path)
+        secure_wipe(vault_path)
     
     # Manifest Cleanup
     del manifest[vault_id]
