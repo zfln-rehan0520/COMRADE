@@ -3,73 +3,73 @@ import json
 import platform
 import secrets
 import ctypes
-import subprocess # Added for robust stealth fallback
+import subprocess
 
 from core.encryption import encrypt_data, decrypt_data
 from core.auth import generate_salt
-from core.config import VAULT_DIR, VAULT_EXTENSION
-
-# Static Manifest Path
-MANIFEST_PATH = os.path.join(VAULT_DIR, ".vault_manifest")
+from core.config import VAULT_DIR, VAULT_EXTENSION, MANIFEST_PATH
 
 def secure_wipe(path):
-    """Physically overwrites file with random data before deletion."""
+    """
+    ANTI-FORENSIC SHREDDER:
+    Physically overwrites the file with random bits before deletion.
+    """
     if os.path.exists(path):
-        unlock_for_writing(path) 
-        size = os.path.getsize(path)
-        with open(path, "wb", buffering=0) as f:
-            f.write(secrets.token_bytes(size))
-        os.remove(path)
+        try:
+            # Normalize attributes to allow overwriting
+            unlock_for_writing(path)
+            size = os.path.getsize(path)
+            with open(path, "wb", buffering=0) as f:
+                f.write(secrets.token_bytes(size))
+            os.remove(path)
+        except Exception as e:
+            # Fallback to standard delete if shredding is blocked
+            os.remove(path)
 
 def hide_vault_folder(path):
     """
     STEALTH MODULE (Ghost Mode):
-    Windows: 0x02 (Hidden) + 0x04 (System)
-    Applies recursively to ensure all contents are invisible.
+    Windows: Sets Hidden (0x02) + System (0x04) attributes.
+    Linux/Mac: Sets permissions to 700 (Owner-only).
     """
     if not os.path.exists(path):
         return
 
+    abs_path = os.path.abspath(path)
+
     if platform.system() == "Windows":
         try:
-            abs_path = os.path.abspath(path)
-            # 1. Apply to the target path
+            # Direct Kernel Call
             ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x02 | 0x04)
-            
-            # 2. Recursive application for directories
-            if os.path.isdir(abs_path):
-                for root, dirs, files in os.walk(abs_path):
-                    for item in dirs + files:
-                        item_path = os.path.join(root, item)
-                        ctypes.windll.kernel32.SetFileAttributesW(item_path, 0x02 | 0x04)
-            
-            # 3. Secondary Shell Fallback (Ensures persistence)
-            subprocess.run(['attrib', '+s', '+h', abs_path, '/s', '/d'], check=False, capture_output=True)
+            # Recursive Shell Fallback
+            subprocess.run(['attrib', '+s', '+h', abs_path, '/s', '/d'], 
+                           check=False, capture_output=True)
         except:
-            pass 
+            pass
     else:
+        # Linux Security: Restricted access permissions
         try:
-            os.chmod(path, 0o700)
+            os.chmod(abs_path, 0o700)
         except:
             pass
 
 def unlock_for_writing(path):
-    """Normalizes attributes (0x80) to allow modification/deletion."""
+    """Removes 'System' and 'Hidden' protections to allow modification."""
     if not os.path.exists(path):
         return
 
+    abs_path = os.path.abspath(path)
+
     if platform.system() == "Windows":
         try:
-            abs_path = os.path.abspath(path)
-            # 0x80 is 'FILE_ATTRIBUTE_NORMAL'
-            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80)
-            # Strip S/H via Shell to be sure
-            subprocess.run(['attrib', '-s', '-h', abs_path, '/s', '/d'], check=False, capture_output=True)
+            ctypes.windll.kernel32.SetFileAttributesW(abs_path, 0x80) # Normal
+            subprocess.run(['attrib', '-s', '-h', abs_path, '/s', '/d'], 
+                           check=False, capture_output=True)
         except:
             pass
     else:
         try:
-            os.chmod(path, 0o700)
+            os.chmod(abs_path, 0o700)
         except:
             pass
 
@@ -83,10 +83,16 @@ def load_manifest():
         return {}
 
 def save_file(file_path, password):
+    """
+    COMMIT TO VAULT:
+    Encrypts, moves to AppData/Hidden folder, and wipes the original.
+    """
     if not os.path.exists(VAULT_DIR):
-        os.makedirs(VAULT_DIR)
+        os.makedirs(VAULT_DIR, mode=0o700, exist_ok=True)
     
-    # Capture the HOME location of the file
+    hide_vault_folder(VAULT_DIR)
+
+    # Capture original home location for restoration
     abs_original_path = os.path.abspath(file_path)
 
     with open(file_path, 'rb') as f:
@@ -95,18 +101,17 @@ def save_file(file_path, password):
     salt = generate_salt()
     encrypted_content = encrypt_data(data, password, salt)
     
-    # Camouflage the filename: Looks like a system cache entry
+    # Camouflage the filename as a system cache index
     vault_filename = f"idx_{os.urandom(4).hex()}{VAULT_EXTENSION}"
     vault_path = os.path.join(VAULT_DIR, vault_filename)
 
     with open(vault_path, 'wb') as f:
         f.write(salt + encrypted_content)
 
-    # Hide the vault in AppData
-    hide_vault_folder(VAULT_DIR)
+    hide_vault_folder(vault_path)
 
+    # Update Manifest
     manifest = load_manifest()
-    # Save the exact original path for the 'Restore' feature
     manifest[vault_filename] = abs_original_path 
     
     unlock_for_writing(MANIFEST_PATH)
@@ -114,12 +119,19 @@ def save_file(file_path, password):
         json.dump(manifest, f, indent=4)
     hide_vault_folder(MANIFEST_PATH)
     
+    # Final Security Step: Shred the unencrypted original
+    secure_wipe(file_path)
+    
     return vault_filename
 
 def extract_file(vault_id, password):
+    """
+    RESTORE HOME:
+    Decrypts and 'teleports' the file back to its original directory.
+    """
     manifest = load_manifest()
     if vault_id not in manifest:
-        raise Exception("Vault ID not found.")
+        raise Exception("Asset signature not found in manifest.")
 
     vault_path = os.path.join(VAULT_DIR, vault_id)
     with open(vault_path, 'rb') as f:
@@ -128,41 +140,24 @@ def extract_file(vault_id, password):
 
     decrypted_data = decrypt_data(encrypted_content, password, salt)
     
-    # THE RESTORE FIX: Get the original home path from manifest
-    target_output_path = manifest[vault_id] 
-    
-    # Auto-create the directory if the user deleted it in the meantime
-    os.makedirs(os.path.dirname(target_output_path), exist_ok=True)
+    # Get original path from manifest
+    target_path = manifest[vault_id]
+    os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
-    with open(target_output_path, 'wb') as f:
+    with open(target_path, 'wb') as f:
         f.write(decrypted_data)
     
-    return target_output_path
-
-def delete_vault_file(vault_id, password):
-    if not password:
-        raise Exception("Authorization required.")
-
-    manifest = load_manifest()
-    if vault_id not in manifest:
-        raise Exception("Target asset not found.")
-        
-    vault_path = os.path.join(VAULT_DIR, vault_id)
+    # Post-Extraction Cleanup: Wipe the vault residue
+    secure_wipe(vault_path)
     
-    with open(vault_path, 'rb') as f:
-        salt = f.read(16)
-        encrypted_content = f.read()
-    decrypt_data(encrypted_content, password, salt)
-
-    if os.path.exists(vault_path):
-        secure_wipe(vault_path)
-    
+    # Update Manifest
     del manifest[vault_id]
     unlock_for_writing(MANIFEST_PATH)
     with open(MANIFEST_PATH, 'w') as f:
         json.dump(manifest, f, indent=4)
     hide_vault_folder(MANIFEST_PATH)
-    return True
+
+    return target_path
 
 def list_secured_files():
     manifest = load_manifest()
