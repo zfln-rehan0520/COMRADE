@@ -1,6 +1,6 @@
 <div align="center">
   <br />
-  <h1>🛡️ COMRADE 🛡️</h1>
+  <h1>🛡️ COMRADE :  A Brother That Gaurds Your Data🛡️</h1>
   <strong>Cyber Operations Module for Resilient Authentication and Data Encryption</strong>
   <br /><br />
   
