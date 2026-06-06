@@ -1,17 +1,30 @@
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import os
-import platform
 
-IS_WINDOWS = platform.system() == "Windows"
-
-if IS_WINDOWS:
+def encrypt_data(data: bytes, password: str, salt: bytes) -> bytes:
+    """
+    Encrypts raw bytes using AES-GCM.
+    Returns: nonce + ciphertext
+    """
+    from core.auth import derive_key
+    key = derive_key(password, salt)
+    aesgcm = AESGCM(key)
+    nonce = os.urandom(12) 
+    
+    ciphertext = aesgcm.encrypt(nonce, data, None)
    
-    base_dir = os.getenv('LOCALAPPDATA', os.getcwd())
-    VAULT_DIR = os.path.join(base_dir, 'ComradeVault')
-else:
-  
-    base_dir = os.path.expanduser('~')
-    VAULT_DIR = os.path.join(base_dir, '.comrade_vault')
+    return nonce + ciphertext
 
-VAULT_EXTENSION = ".dat"
-
-MANIFEST_PATH = os.path.join(VAULT_DIR, "sys_cache.idx")
+def decrypt_data(encrypted_data: bytes, password: str, salt: bytes) -> bytes:
+    """
+    Decrypts AES-GCM data. 
+    Expects nonce to be the first 12 bytes.
+    """
+    from core.auth import derive_key
+    key = derive_key(password, salt)
+    aesgcm = AESGCM(key)
+    
+    nonce = encrypted_data[:12]
+    ciphertext = encrypted_data[12:]
+    
+    return aesgcm.decrypt(nonce, ciphertext, None)
