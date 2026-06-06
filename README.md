@@ -92,8 +92,8 @@ Once the environment is active, use the following commands:
 * **List Vault Content**: `python main.py --list`
 * **Launch GUI**: `python main.py`
 * **Secure a File**: `python main.py --secure "path/to/file.txt"`
-* **Extract Asset**: `python main.py --extract <VAULT_ID>.vault`
-* **Secure Wipe**: `python main.py --remove <VAULT_ID>.vault`
+* **Extract Asset**: `python main.py --extract VAULT_ID`
+* **Secure Wipe**: `python main.py --remove VAULT_ID`
 
 ### 3. OS-Specific Security Logic
 
