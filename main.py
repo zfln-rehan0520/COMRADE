@@ -10,7 +10,6 @@ from core.config import VAULT_DIR
 
 init(autoreset=True)
 
-
 VAULT_HANDLE = None
 
 def secure_wipe(file_path):
@@ -64,7 +63,6 @@ def main():
             original_path = args.secure
             name = save_file(original_path, password)
             
-           
             secure_wipe(original_path)
             
             apply_operational_lock() 
@@ -83,21 +81,27 @@ def main():
     elif args.extract:
         display_banner()
         password = get_password("ENTER MASTER KEY: ")
+        
         try:
-           
             path = extract_file(args.extract, password)
+        except Exception:
             
-           
-            print(f"{Fore.CYAN}🧹 Finalizing extraction: Shredding vault residue...")
+            print(f"{Fore.RED}❌ Denied: Invalid Key.")
+            return
+
+        
+        print(f"{Fore.CYAN}🧹 Finalizing extraction: Shredding vault residue...")
+        try:
             release_lock()  
             delete_vault_file(args.extract, password)
             apply_operational_lock() 
-           
+        except Exception as cleanup_error:
             
-            print(f"✅ Restored to: {path}")
-            print(f"{Fore.GREEN}🛡️ Vault entry cleared. No encrypted trace remains.")
-        except Exception as e:
-            print(f"❌ Denied: Invalid Key.")
+            apply_operational_lock() 
+            print(f"{Fore.YELLOW}[!] Cleanup Warning: Could not purge vault footprint safely ({cleanup_error})")
+            
+        print(f"✅ Restored to: {path}")
+        print(f"{Fore.GREEN}🛡️ Vault entry cleared. No encrypted trace remains.")
 
     elif args.remove:
         display_banner()
