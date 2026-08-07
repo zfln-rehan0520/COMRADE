@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Resolve project root directory dynamically
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Run using the virtual environment's Python binary
+"$PROJECT_ROOT/venv/bin/python" "$PROJECT_ROOT/cli/cli_invite.py" "$@"

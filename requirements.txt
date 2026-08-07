@@ -1,0 +1,14 @@
+cryptography>=42.0.0
+maskpass>=0.3.7
+customtkinter>=5.2.0
+pillow>=10.0.0
+rich>=13.0.0
+colorama>=0.4.6
+ollama>=0.1.0
+pytest>=8.0.0
+tkcalendar>=1.6.1
+pytz>=2023.3
+resend>=0.7.0
+requests>=2.31.0
+python-dotenv>=1.0.0
+supabase
