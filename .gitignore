@@ -1,0 +1,34 @@
+# Security & Secret Files
+.env
+.env.*
+!.env.example
+*.enc
+.comrade_credentials.json
+.comrade_credentials.enc
+
+# Local Storage & Database
+vault/
+*.vault
+.vault_manifest
+dispatch_limits.json
+
+# Python & Environment
+venv/
+.venv/
+bin/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Build & Packaging Artifacts
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# IDE & OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+.DS_Store
