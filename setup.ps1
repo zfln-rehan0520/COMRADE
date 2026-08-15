@@ -94,6 +94,6 @@ Write-Host "`n[=================================================================
 Write-Typewriter "[+] DEPLOYMENT COMPLETE. ENVIRONMENT SECURED." "White"
 Write-Host ""
 Write-Host "To launch COMRADE, ensure your virtual environment is active and run:" -ForegroundColor DarkGray
-Write-Host "  GUI Vault Mode : " -NoNewline; Write-Host "python main.py" -ForegroundColor Yellow
-Write-Host "  CLI Relay Mode : " -NoNewline; Write-Host "python -m cli.cli_comms" -ForegroundColor Yellow
+Write-Host "  GUI Mode : " -NoNewline; Write-Host ".\comrade gui" -ForegroundColor Yellow
+Write-Host "  CLI Mode : " -NoNewline; Write-Host ".\comrade cli" -ForegroundColor Yellow
 Write-Host ""
